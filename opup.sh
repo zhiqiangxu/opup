@@ -11,6 +11,22 @@ function activate_direnv() {
     eval "$(direnv export bash)"
 }
 
+function save_cwd() {
+    original_cwd=$(pwd)
+}
+
+function recover_cwd() {
+    cd $original_cwd
+}
+
+save_cwd
+# Get the directory of the script
+script_dir=$(dirname "$(realpath "$0")")
+script_path="$(realpath "$0")"
+cd $script_dir
+# working directory is the parent directory
+cd ..
+
 # dispatch for subcommands if specified
 if [ "$#" -ne 0 ]; then
     continue=0
@@ -97,7 +113,7 @@ fi
 
 function set_error_on() {
     set -e
-    trap 'echo "Error occurred in command: $BASH_COMMAND, at line $LINENO"; exit 1' ERR
+    trap 'echo "Error occurred in command: $BASH_COMMAND, at line $LINENO"; recover_cwd; exit 1' ERR
 }
 
 set_error_on
@@ -182,10 +198,10 @@ function initialize_op_geth() {
 }
 
 function startup_op_services() {
-    screen -d -m -S "op-geth" bash -c "$0 geth"
-    screen -d -m -S "op-node" bash -c "$0 node"
-    screen -d -m -S "op-batcher" bash -c "$0 batcher"
-    screen -d -m -S "op-proposer" bash -c "$0 proposer"
+    screen -d -m -S "op-geth" bash -c "$script_path geth"
+    screen -d -m -S "op-node" bash -c "$script_path node"
+    screen -d -m -S "op-batcher" bash -c "$script_path batcher"
+    screen -d -m -S "op-proposer" bash -c "$script_path proposer"
 }
 
 function start_da_server() {
@@ -198,7 +214,7 @@ function start_da_server() {
 }
 EOF
     popd
-    screen -d -m -S "da-server" bash -c "$0 da"
+    screen -d -m -S "da-server" bash -c "$script_path da"
 }
 
 
@@ -224,7 +240,7 @@ Press Enter to continue..."
     fi
     open_with_lineno docker-compose/envs/common-frontend.env
     popd
-    screen -d -m -S "blockscout" bash -c "$0 blockscout"
+    screen -d -m -S "blockscout" bash -c "$script_path blockscout"
 }
 
 function quote_string() {
@@ -260,6 +276,55 @@ function replace_env_value_or_insert() {
     fi
 }
 
+# deploy storage/inbox/gas token contracts
+function deploy_es_contracts_for_local_l1() {
+    
+    pushd ..
+    prompt "Next we'll deploy storage/inbox/gas token contracts.
+Press Enter to continue..."
+    # deploy storage contract
+    # FYI: https://github.com/ethstorage/es-node/blob/main/docs/archiver/archiver-guide-devnet.md#deploying-ethstorage-contracts
+    download_repo "storage-contracts-v1" https://github.com/ethstorage/storage-contracts-v1.git
+    cd storage-contracts-v1
+    git checkout op-devnet
+    apt install npm
+    npm set registry https://mirrors.cloud.tencent.com/npm/
+    npm run install:all
+    # the private key here comes from op-batcher-key.txt
+    op_batcher_pk="bf7604d9d3a1c7748642b1b7b05c2bd219c9faa91458b370f85e5a40f3b03af7"
+    echo "L1_RPC_URL=http://localhost:8645
+PRIVATE_KEY=$op_batcher_pk" > .env
+    echo "Deploying storage contract ..."
+    npx hardhat run scripts/deploy.js --network op_devnet
+    read -p "Please enter storage contract address printed above: " ES_CONTRACT
+    cd ..
+
+    # deploy inbox contract
+    download_repo "es-op-batchinbox" https://github.com/ethstorage/es-op-batchinbox
+    cd es-op-batchinbox
+    echo "Deploying inbox contract ..."
+    forge create src/BatchInbox.sol:BatchInbox  \
+            --broadcast \
+            --private-key $op_batcher_pk \
+            --rpc-url http://localhost:8645 \
+            --constructor-args $ES_CONTRACT
+    read -p "Please enter inbox contract address printed above: " INBOX_CONTRACT
+    cd ..
+
+    # deploy gas token contract
+    download_repo izar-contracts https://github.com/zhiqiangxu/izar-contracts
+    cd izar-contracts
+    echo "Deploying gas token contract ..."
+    forge create src/misc/MintAllERC20.sol:MintAllERC20  \
+            --broadcast \
+            --private-key $op_batcher_pk \
+            --rpc-url http://localhost:8645 \
+            --constructor-args "QKC" "QKC" 10000000000000000000000000000000
+    read -p "Please enter gas token contract address printed above: " CGT_CONTRACT
+    cd ..
+    popd
+}
+
 if [ -z $start ]; then
     if [ -n "${ES}" ]; then
         optimism="https://github.com/ethstorage/optimism"
@@ -287,7 +352,10 @@ if [ -z $start ]; then
     forge clean
     just build
     popd
-    make op-node op-batcher op-proposer op-challenger
+    just op-node/op-node
+    just op-batcher/op-batcher 
+    just op-proposer/op-proposer 
+    just op-challenger/op-challenger
     cd op-deployer
     just build
     popd
@@ -303,10 +371,20 @@ if [ -z $start ]; then
     fi
 
     if [ -n "${ES}" ]; then
-        replace_env_value .envrc L1_RPC_URL "http://88.99.30.186:8545"
-        replace_env_value .envrc L1_RPC_KIND standard
-        replace_env_value_or_insert .envrc L1_BEACON_URL "http://88.99.30.186:3500"
-        replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL "http://65.108.236.27:9645"
+        if [ -z $LOCAL_L1 ]; then
+            replace_env_value .envrc L1_RPC_URL "http://88.99.30.186:8545"
+            replace_env_value .envrc L1_RPC_KIND standard
+            replace_env_value_or_insert .envrc L1_BEACON_URL "http://88.99.30.186:3500"
+            replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL "http://65.108.236.27:9645"
+        else
+            replace_env_value .envrc L1_RPC_URL "http://localhost:8645"
+            replace_env_value .envrc L1_RPC_KIND standard
+            replace_env_value .envrc L1_CHAIN_ID 900
+            replace_env_value_or_insert .envrc L1_BEACON_URL "http://localhost:5052"
+            replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL "http://localhost:5052"
+            
+            deploy_es_contracts_for_local_l1
+        fi
     fi
     prompt "Next we'll fill out the environment variable file ".envrc", finish by quiting the editor.
 First, let's fill the L1_RPC_URL/L1_RPC_KIND/L1_BEACON_URL/L1_BEACON_ARCHIVER_URL/L1_CHAIN_ID/L2_CHAIN_ID.
@@ -381,7 +459,11 @@ Press Enter after you funded."
     fi
 
     if [ "$answer" = "Y" ]; then
-        ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer
+        if [ -z $LOCAL_L1 ]; then
+            ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer
+        else
+            ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer --intent-config-type custom --deployment-strategy live
+        fi
 
         replace_toml_value .deployer/intent.toml l1ChainID $L1_CHAIN_ID
         replace_toml_value .deployer/intent.toml l1ContractsLocator  $(quote_string "file://$forgeArtifacts")
@@ -399,19 +481,31 @@ Press Enter after you funded."
         replace_toml_value .deployer/intent.toml batcher $(quote_string $GS_BATCHER_ADDRESS)
         replace_toml_value .deployer/intent.toml proposer $(quote_string $GS_PROPOSER_ADDRESS)
         replace_toml_value .deployer/intent.toml challenger $(quote_string $GS_CHALLENGER_ADDRESS)
+        if [ -n $LOCAL_L1 ]; then
+            replace_toml_value .deployer/intent.toml eip1559DenominatorCanyon 250
+            replace_toml_value .deployer/intent.toml eip1559Denominator 50
+            replace_toml_value .deployer/intent.toml eip1559Elasticity 6
+        fi
 
         if [ -n "${ES}" ]; then
             if ! grep -q "\[globalDeployOverrides\]" .deployer/intent.toml; then
-                echo "
+                if [ -z $CGT_CONTRACT ]; then
+                    CGT_CONTRACT="0xe6ABD81D16a20606a661D4e075cdE5734AB62519"
+                fi
+                if [ -z $INBOX_CONTRACT ]; then
+                    INBOX_CONTRACT="0x27504265a9bc4330e3fe82061a60cd8b6369b4dc"
+                fi
+                cat <<EOF >> .deployer/intent.toml
 [globalDeployOverrides]
   useInboxContract = true
   useSoulGasToken = true
   isSoulBackedByNative = true
   useCustomGasToken = true
-  customGasTokenAddress = "0xe6ABD81D16a20606a661D4e075cdE5734AB62519"
-  batchInboxAddress = "0x27504265a9bc4330e3fe82061a60cd8b6369b4dc"
+  customGasTokenAddress = "$CGT_CONTRACT"
+  batchInboxAddress = "$INBOX_CONTRACT"
   l2GenesisBlobTimeOffset = "0x0"
-  sequencerWindowSize = 7200" >> .deployer/intent.toml
+  sequencerWindowSize = 7200
+EOF
             fi
         fi
     fi
@@ -457,6 +551,7 @@ Press Enter to continue..."
 fi
 
 
+
 # Now start all services
 if [ -n "${ES}" ]; then
     start_da_server
@@ -470,3 +565,4 @@ prompt "Congratulations, installation finished!
 Press Enter to continue..."
 
 
+recover_cwd

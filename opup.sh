@@ -276,8 +276,8 @@ function replace_env_value_or_insert() {
     fi
 }
 
-# deploy storage/inbox/gas token contracts
-function deploy_es_contracts_for_local_l1() {
+# deploy storage/inbox/gas token contracts and fund accounts
+function deploy_es_contracts_and_fund_accounts_for_local_l1() {
     
     pushd ..
     prompt "Next we'll deploy storage/inbox/gas token contracts.
@@ -292,8 +292,9 @@ Press Enter to continue..."
     npm run install:all
     # the private key here comes from op-batcher-key.txt
     op_batcher_pk="bf7604d9d3a1c7748642b1b7b05c2bd219c9faa91458b370f85e5a40f3b03af7"
-    echo "L1_RPC_URL=http://localhost:8645
+    echo "L1_RPC_URL=$L1_RPC_URL
 PRIVATE_KEY=$op_batcher_pk" > .env
+    source .env
     echo "Deploying storage contract ..."
     npx hardhat run scripts/deploy.js --network op_devnet
     read -p "Please enter storage contract address printed above: " ES_CONTRACT
@@ -306,7 +307,7 @@ PRIVATE_KEY=$op_batcher_pk" > .env
     forge create src/BatchInbox.sol:BatchInbox  \
             --broadcast \
             --private-key $op_batcher_pk \
-            --rpc-url http://localhost:8645 \
+            --rpc-url $L1_RPC_URL \
             --constructor-args $ES_CONTRACT
     read -p "Please enter inbox contract address printed above: " INBOX_CONTRACT
     cd ..
@@ -318,12 +319,31 @@ PRIVATE_KEY=$op_batcher_pk" > .env
     forge create src/misc/MintAllERC20.sol:MintAllERC20  \
             --broadcast \
             --private-key $op_batcher_pk \
-            --rpc-url http://localhost:8645 \
+            --rpc-url $L1_RPC_URL \
             --constructor-args "QKC" "QKC" 10000000000000000000000000000000
     read -p "Please enter gas token contract address printed above: " CGT_CONTRACT
     cd ..
     popd
+
+    # assume GS_ADMIN_PRIVATE_KEY == op_batcher_pk
+    if [ -z "${GS_ADMIN_PRIVATE_KEY}" ]; then
+        echo "GS_ADMIN_PRIVATE_KEY != op_batcher_pk"
+        exit 1
+    fi
+    if [[ "$GS_ADMIN_PRIVATE_KEY" != $op_batcher_pk ]]; then
+        echo "GS_ADMIN_PRIVATE_KEY != op_batcher_pk"
+        exit 1
+    fi
+    # fund accounts
+    prompt "Now funding batcher/proposer/challenger accounts.
+Press Enter to continue..."
+    cast send $GS_BATCHER_ADDRESS --value 10000000000000000000000 --private-key $op_batcher_pk -r $L1_RPC_URL
+    cast send $GS_PROPOSER_ADDRESS --value 10000000000000000000000 --private-key $op_batcher_pk -r $L1_RPC_URL
+    cast send $GS_CHALLENGER_ADDRESS --value 10000000000000000000000 --private-key $op_batcher_pk -r $L1_RPC_URL
+    # fund inbox for batcher account
+    cast send $INBOX_CONTRACT "deposit(address)" $GS_BATCHER_ADDRESS --value 10000000000000000000000 --private-key $op_batcher_pk -r $L1_RPC_URL
 }
+
 
 if [ -z $start ]; then
     if [ -n "${ES}" ]; then
@@ -382,8 +402,6 @@ if [ -z $start ]; then
             replace_env_value .envrc L1_CHAIN_ID 900
             replace_env_value_or_insert .envrc L1_BEACON_URL "http://localhost:5052"
             replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL "http://localhost:5052"
-            
-            deploy_es_contracts_for_local_l1
         fi
     fi
     prompt "Next we'll fill out the environment variable file ".envrc", finish by quiting the editor.
@@ -436,7 +454,10 @@ Press Enter to continue..."
 
     edit_envrc_and_approve
 
-    prompt "Please fund the addresses.
+    if [[ -n "${ES}" && -n "${LOCAL_L1}" ]]; then
+        deploy_es_contracts_and_fund_accounts_for_local_l1
+    else
+        prompt "Please fund the addresses.
 Recommendations for Sepolia are:
 
 \tAdmin — 0.5 Sepolia ETH
@@ -444,6 +465,9 @@ Recommendations for Sepolia are:
 \tBatcher — 0.1 Sepolia ETH
 
 Press Enter after you funded."
+    fi
+
+    
 
     # fill out op-deployer intent
     forgeArtifacts="$(pwd)/packages/contracts-bedrock/forge-artifacts/"

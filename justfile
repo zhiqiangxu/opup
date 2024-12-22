@@ -7,4 +7,5 @@ down:
 nuke: (down)
     ./opnuke.sh
 
-    
+start:
+    ./opstart.sh    

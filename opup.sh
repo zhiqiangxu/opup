@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Get the directory of the script
+script_dir=$(dirname "$(realpath "$0")")
+source "$script_dir/common.sh"
+prelude
 
 function prompt() {
     msg=$1
@@ -11,21 +15,6 @@ function activate_direnv() {
     eval "$(direnv export bash)"
 }
 
-function save_cwd() {
-    original_cwd=$(pwd)
-}
-
-function recover_cwd() {
-    cd $original_cwd
-}
-
-save_cwd
-# Get the directory of the script
-script_dir=$(dirname "$(realpath "$0")")
-script_path="$(realpath "$0")"
-cd $script_dir
-# working directory is the parent directory
-cd ..
 
 # dispatch for subcommands if specified
 if [ "$#" -ne 0 ]; then
@@ -113,7 +102,7 @@ fi
 
 function set_error_on() {
     set -e
-    trap 'echo "Error occurred in command: $BASH_COMMAND, at line $LINENO"; recover_cwd; exit 1' ERR
+    trap 'echo "Error occurred in command: $BASH_COMMAND, at line $LINENO"; postlude; exit 1' ERR
 }
 
 set_error_on
@@ -197,28 +186,6 @@ function initialize_op_geth() {
     popd
 }
 
-function startup_op_services() {
-    screen -d -m -S "op-geth" bash -c "$script_path geth"
-    screen -d -m -S "op-node" bash -c "$script_path node"
-    screen -d -m -S "op-batcher" bash -c "$script_path batcher"
-    screen -d -m -S "op-proposer" bash -c "$script_path proposer"
-}
-
-function start_da_server() {
-    pushd da-server
-    cat <<EOF | jq . > config.json
-{
-    "SequencerIP": "127.0.0.1",
-    "ListenAddr": "0.0.0.0:8888",
-    "StorePath":  "/root/da/data"
-}
-EOF
-    popd
-    screen -d -m -S "da-server" bash -c "$script_path da"
-}
-
-
-
 function deploy_explorer() {
 
     echo "Ready to deploy explorer..."
@@ -240,7 +207,7 @@ Press Enter to continue..."
     fi
     open_with_lineno docker-compose/envs/common-frontend.env
     popd
-    screen -d -m -S "blockscout" bash -c "$script_path blockscout"
+    start_explorer
 }
 
 function quote_string() {
@@ -436,7 +403,6 @@ Press Enter to continue"
         fi
         rpc_l1_chainid=$(l1_chain_id | tr -d '\n')
         if [[ "$rpc_l1_chainid" -eq $L1_CHAIN_ID ]]; then
-            echo "equal $rpc_l1_chainid $L1_CHAIN_ID"
             break
         else
             prompt "chainid of L1_RPC_URL doesn't match L1_CHAIN_ID, reconfigure...
@@ -483,11 +449,7 @@ Press Enter after you funded."
     fi
 
     if [ "$answer" = "Y" ]; then
-        if [ -z $LOCAL_L1 ]; then
-            ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer
-        else
-            ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer --intent-config-type custom --deployment-strategy live
-        fi
+        ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer --intent-config-type custom --deployment-strategy live
 
         replace_toml_value .deployer/intent.toml l1ChainID $L1_CHAIN_ID
         replace_toml_value .deployer/intent.toml l1ContractsLocator  $(quote_string "file://$forgeArtifacts")
@@ -505,11 +467,9 @@ Press Enter after you funded."
         replace_toml_value .deployer/intent.toml batcher $(quote_string $GS_BATCHER_ADDRESS)
         replace_toml_value .deployer/intent.toml proposer $(quote_string $GS_PROPOSER_ADDRESS)
         replace_toml_value .deployer/intent.toml challenger $(quote_string $GS_CHALLENGER_ADDRESS)
-        if [ -n $LOCAL_L1 ]; then
-            replace_toml_value .deployer/intent.toml eip1559DenominatorCanyon 250
-            replace_toml_value .deployer/intent.toml eip1559Denominator 50
-            replace_toml_value .deployer/intent.toml eip1559Elasticity 6
-        fi
+        replace_toml_value .deployer/intent.toml eip1559DenominatorCanyon 250
+        replace_toml_value .deployer/intent.toml eip1559Denominator 50
+        replace_toml_value .deployer/intent.toml eip1559Elasticity 6
 
         if [ -n "${ES}" ]; then
             if ! grep -q "\[globalDeployOverrides\]" .deployer/intent.toml; then
@@ -580,7 +540,7 @@ fi
 if [ -n "${ES}" ]; then
     start_da_server
 fi
-startup_op_services
+start_op_services
 deploy_explorer
 
 
@@ -589,4 +549,4 @@ prompt "Congratulations, installation finished!
 Press Enter to continue..."
 
 
-recover_cwd
+postlude

@@ -257,8 +257,7 @@ Press Enter to continue..."
     apt install npm
     npm set registry https://mirrors.cloud.tencent.com/npm/
     npm run install:all
-    # the private key here comes from op-batcher-key.txt
-    op_batcher_pk="bf7604d9d3a1c7748642b1b7b05c2bd219c9faa91458b370f85e5a40f3b03af7"
+    
     echo "L1_RPC_URL=$L1_RPC_URL
 PRIVATE_KEY=$op_batcher_pk" > .env
     source .env
@@ -292,7 +291,7 @@ PRIVATE_KEY=$op_batcher_pk" > .env
     cd ..
     popd
 
-    # assume GS_ADMIN_PRIVATE_KEY == op_batcher_pk
+    # check that GS_ADMIN_PRIVATE_KEY == op_batcher_pk
     if [ -z "${GS_ADMIN_PRIVATE_KEY}" ]; then
         echo "GS_ADMIN_PRIVATE_KEY != op_batcher_pk"
         exit 1
@@ -367,6 +366,10 @@ if [ -z $start ]; then
             replace_env_value .envrc L1_RPC_URL "http://localhost:8645"
             replace_env_value .envrc L1_RPC_KIND standard
             replace_env_value .envrc L1_CHAIN_ID 900
+            # the private key here comes from op-batcher-key.txt
+            op_batcher_pk="bf7604d9d3a1c7748642b1b7b05c2bd219c9faa91458b370f85e5a40f3b03af7"
+            replace_env_value .envrc GS_ADMIN_PRIVATE_KEY $op_batcher_pk
+            replace_env_value .envrc GS_ADMIN_ADDRESS $(cast wallet address $op_batcher_pk)
             replace_env_value_or_insert .envrc L1_BEACON_URL "http://localhost:5052"
             replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL "http://localhost:5052"
         fi
@@ -413,10 +416,17 @@ Press Enter to continue..."
     # fill out ".envrc": wallets
     ./packages/contracts-bedrock/scripts/getting-started/wallets.sh
 
-    prompt "
+    if [[ -n "${ES}" && -n "${LOCAL_L1}" ]]; then
+        prompt "
+Please copy the above(*except the Admin account*), next we'll fill it into .envrc.
+
+Press Enter to continue..."
+    else
+        prompt "
 Please copy the above, next we'll fill it into .envrc.
 
 Press Enter to continue..."
+    fi
 
     edit_envrc_and_approve
 

@@ -9,3 +9,6 @@ nuke: (down)
 
 start:
     ./opstart.sh    
+
+l1:
+    ./opl1.sh

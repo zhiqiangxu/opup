@@ -314,9 +314,15 @@ Press Enter to continue..."
 if [ -z $start ]; then
     if [ -n "${ES}" ]; then
         optimism="https://github.com/ethstorage/optimism"
-        optimismBranch="op-es"
+        read -p "Please enter your optimism branch(op-es by default): " optimismBranch
+        if [ -z $optimismBranch ]; then
+            optimismBranch="op-es"
+        fi
         opgeth="https://github.com/ethstorage/op-geth"
-        opgethBranch="op-es"
+        read -p "Please enter your op-geth branch(op-es by default): " opgethBranch
+        if [ -z $opgethBranch ]; then
+            opgethBranch="op-es"
+        fi
     else
         read -p "Please enter your optimism url: " optimism
         read -p "Please enter your optimism branch: " optimismBranch

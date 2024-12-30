@@ -60,7 +60,7 @@ if [ "$#" -ne 0 ]; then
                                --sub-safety-margin=20   --num-confirmations=1   --safe-abort-nonce-too-low-count=3   --resubmission-timeout=30s\
                                --rpc.addr=0.0.0.0   --rpc.port=8548   --rpc.enable-admin      --l1-eth-rpc=$L1_RPC_URL   \
                                --private-key=$GS_BATCHER_PRIVATE_KEY --data-availability-type blobs \
-                               --batch-type=1 --max-channel-duration=3600 2>&1 | tee -a batcher.log -i
+                               --batch-type=1 --max-channel-duration=3600 --target-num-frames=5 2>&1 | tee -a batcher.log -i
             prompt "Press Enter to quit..."
             ;;
         proposer)

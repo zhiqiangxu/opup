@@ -29,13 +29,17 @@ if [ "$#" -ne 0 ]; then
             pushd optimism
             activate_direnv
             l2ChainID=$L2_CHAIN_ID
+            httpSGTParam=""
+            if [ -n "${ES}" ]; then
+                httpSGTParam=" --httpsgt --httpsgt.addr=0.0.0.0"
+            fi
             popd
             cd op-geth
             ./build/bin/geth --datadir ./datadir   --http   --http.corsdomain="*"   --http.vhosts="*"   --http.addr=0.0.0.0   \
                              --http.api=web3,debug,eth,txpool,net,engine,miner   --ws   --ws.addr=0.0.0.0   --ws.port=8546   --ws.origins="*" \
                              --ws.api=debug,eth,txpool,net,engine,miner   --syncmode=full   --gcmode=archive   --nodiscover   --maxpeers=0  \
                              --networkid=$l2ChainID --authrpc.vhosts="*"   --authrpc.addr=0.0.0.0   --authrpc.port=8551   \
-                             --authrpc.jwtsecret=./jwt.txt  --rollup.disabletxpoolgossip=true  2>&1 | tee -a geth.log -i
+                             $httpSGTParam --authrpc.jwtsecret=./jwt.txt  --rollup.disabletxpoolgossip=true  2>&1 | tee -a geth.log -i
             prompt "Press Enter to quit..."
             ;;
         node)

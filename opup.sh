@@ -205,6 +205,7 @@ Press Enter to continue..."
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_APP_HOST" $hostIP
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_ID" $L2_CHAIN_ID
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_VISUALIZE_API_HOST" "http://$hostIP:8081"
+    replace_env_value_or_insert docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_RPC_URL" "http://$hostIP:8545"
     if [ -n "${ES}" ]; then
         replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_CURRENCY_NAME" QKC
         replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_CURRENCY_SYMBOL" QKC

@@ -206,6 +206,7 @@ Press Enter to continue..."
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_ID" $L2_CHAIN_ID
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_VISUALIZE_API_HOST" "http://$hostIP:8081"
     replace_env_value_or_insert docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_RPC_URL" "http://$hostIP:8545"
+    replace_all docker-compose/proxy/default.conf.template "add_header 'Access-Control-Allow-Origin' 'http://localhost' always;" "add_header 'Access-Control-Allow-Origin' '*' always;"
     if [ -n "${ES}" ]; then
         replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_CURRENCY_NAME" QKC
         replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_CURRENCY_SYMBOL" QKC
@@ -248,6 +249,13 @@ function replace_env_value_or_insert() {
     if ! grep -q "$key=" $file; then
 	    echo "export $key=$value" >> $file
     fi
+}
+
+function replace_all() {
+    file=$1
+    a=$2
+    b=$3
+    sed -i "s#$a#$b#g" $file
 }
 
 # deploy storage/inbox/gas token contracts and fund accounts

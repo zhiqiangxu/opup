@@ -12,3 +12,6 @@ start:
 
 l1:
     ./opl1.sh
+
+update_op_bins:
+    ./update_op_bins.sh

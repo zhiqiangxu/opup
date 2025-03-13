@@ -15,3 +15,6 @@ l1:
 
 update_op_bins:
     ./update_op_bins.sh
+
+version:
+    @echo "OP version: 750ed20"

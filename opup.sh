@@ -269,6 +269,22 @@ function replace_all() {
     sed_replace "s#$a#$b#g" $file
 }
 
+function install_npm() {
+    if [[ "$(uname)" == "Linux" ]]; then
+        apt install npm
+    else
+        # macOS
+        if ! command -v brew &> /dev/null; then
+            echo "brew could not be found, please install Homebrew first."
+            exit 1
+        fi
+        # Check if npm is already installed
+        if ! command -v npm &> /dev/null; then
+            # Install npm using Homebrew
+            brew install node
+        fi
+    fi
+}
 # deploy storage/inbox/gas token contracts and fund accounts
 function deploy_es_contracts_and_fund_accounts_for_local_l1() {
     
@@ -280,7 +296,7 @@ Press Enter to continue..."
     download_repo "storage-contracts-v1" https://github.com/ethstorage/storage-contracts-v1.git
     cd storage-contracts-v1
     git checkout op-devnet
-    apt install npm
+    install_npm
     npm set registry https://mirrors.cloud.tencent.com/npm/
     npm run install:all
     

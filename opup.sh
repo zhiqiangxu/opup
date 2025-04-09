@@ -374,7 +374,7 @@ if [ -z $start ]; then
     # fill out ".envrc": L1_RPC_URL/L1_RPC_KIND/L1_BEACON_URL/L1_BEACON_ARCHIVER_URL/L1_CHAIN_ID/L2_CHAIN_ID
     pushd optimism
     if [ ! -e .envrc ]; then
-        cp .envrc.example .envrc
+        cp $script_dir/assets/.envrc.example .envrc
     fi
 
     if [ -n "${ES}" ]; then
@@ -480,7 +480,7 @@ Press Enter after you funded."
     fi
 
     if [ "$answer" = "Y" ]; then
-        ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer --intent-config-type custom --deployment-strategy live
+        ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer --intent-config-type custom
 
         replace_toml_value .deployer/intent.toml l1ChainID $L1_CHAIN_ID
         replace_toml_value .deployer/intent.toml l1ContractsLocator  $(quote_string "file://$forgeArtifacts")
@@ -514,6 +514,7 @@ Press Enter after you funded."
 [globalDeployOverrides]
   useInboxContract = true
   useSoulGasToken = true
+  soulGasTokenBlock = 0
   isSoulBackedByNative = true
   useCustomGasToken = true
   customGasTokenAddress = "$CGT_CONTRACT"
@@ -538,7 +539,7 @@ Press Enter to continue..."
 
     prompt "Now we're ready to apply op-deployer intent config.
 Press Enter to continue..."
-    ./bin/op-deployer apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY
+    ./bin/op-deployer apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY  --deployment-target live
 
     # generate the L2 config files(genesis.json/rollup.json/jwt.txt)
     prompt "Now generate the L2 config files(genesis.json/rollup.json/jwt.txt)...

@@ -230,21 +230,32 @@ function replace_toml_value() {
     file=$1
     key=$2
     value=$3
-    sed -i "s#$key = .*#$key = $value#" $file
+    sed_replace "s#$key = .*#$key = $value#" $file
 }
 
 function replace_env_value() {
     file=$1
     key=$2
     value=$3
-    sed -i "s#$key=.*#$key=$value#" $file
+    sed_replace "s#$key=.*#$key=$value#" $file
+}
+
+# for compatibility between macOS and linux
+function sed_replace() {
+    cmd=$1
+    file=$2
+    if [[ "$(uname)" == "Linux" ]]; then
+        sed -i "$cmd" $file
+    else
+        sed -i '' "$cmd" $file
+    fi
 }
 
 function replace_env_value_or_insert() {
     file=$1
     key=$2
     value=$3
-    sed -i "s#$key=.*#$key=$value#" $file
+    sed_replace "s#$key=.*#$key=$value#" $file
     
     if ! grep -q "$key=" $file; then
 	    echo "export $key=$value" >> $file
@@ -255,7 +266,7 @@ function replace_all() {
     file=$1
     a=$2
     b=$3
-    sed -i "s#$a#$b#g" $file
+    sed_replace "s#$a#$b#g" $file
 }
 
 # deploy storage/inbox/gas token contracts and fund accounts

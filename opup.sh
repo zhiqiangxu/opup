@@ -274,7 +274,7 @@ Press Enter to continue..."
     npm run install:all
     
     echo "L1_RPC_URL=$L1_RPC_URL
-PRIVATE_KEY=$op_batcher_pk" > .env
+PRIVATE_KEY=$prefunded_pk" > .env
     source .env
     echo "Deploying storage contract ..."
     npx hardhat run scripts/deploy.js --network op_devnet
@@ -287,7 +287,7 @@ PRIVATE_KEY=$op_batcher_pk" > .env
     echo "Deploying inbox contract ..."
     forge create src/BatchInbox.sol:BatchInbox  \
             --broadcast \
-            --private-key $op_batcher_pk \
+            --private-key $prefunded_pk \
             --rpc-url $L1_RPC_URL \
             --constructor-args $ES_CONTRACT
     read -p "Please enter inbox contract address printed above: " INBOX_CONTRACT
@@ -299,30 +299,30 @@ PRIVATE_KEY=$op_batcher_pk" > .env
     echo "Deploying gas token contract ..."
     forge create src/misc/MintAllERC20.sol:MintAllERC20  \
             --broadcast \
-            --private-key $op_batcher_pk \
+            --private-key $prefunded_pk \
             --rpc-url $L1_RPC_URL \
             --constructor-args "QKC" "QKC" 10000000000000000000000000000000
     read -p "Please enter gas token contract address printed above: " CGT_CONTRACT
     cd ..
     popd
 
-    # check that GS_ADMIN_PRIVATE_KEY == op_batcher_pk
+    # check that GS_ADMIN_PRIVATE_KEY == prefunded_pk
     if [ -z "${GS_ADMIN_PRIVATE_KEY}" ]; then
-        echo "GS_ADMIN_PRIVATE_KEY != op_batcher_pk"
+        echo "GS_ADMIN_PRIVATE_KEY != prefunded_pk"
         exit 1
     fi
-    if [[ "$GS_ADMIN_PRIVATE_KEY" != $op_batcher_pk ]]; then
-        echo "GS_ADMIN_PRIVATE_KEY != op_batcher_pk"
+    if [[ "$GS_ADMIN_PRIVATE_KEY" != $prefunded_pk ]]; then
+        echo "GS_ADMIN_PRIVATE_KEY != prefunded_pk"
         exit 1
     fi
     # fund accounts
     prompt "Now funding batcher/proposer/challenger accounts.
 Press Enter to continue..."
-    cast send $GS_BATCHER_ADDRESS --value 10000000000000000000000 --private-key $op_batcher_pk -r $L1_RPC_URL
-    cast send $GS_PROPOSER_ADDRESS --value 10000000000000000000000 --private-key $op_batcher_pk -r $L1_RPC_URL
-    cast send $GS_CHALLENGER_ADDRESS --value 10000000000000000000000 --private-key $op_batcher_pk -r $L1_RPC_URL
+    cast send $GS_BATCHER_ADDRESS --value 10000000000000000000000 --private-key $prefunded_pk -r $L1_RPC_URL
+    cast send $GS_PROPOSER_ADDRESS --value 10000000000000000000000 --private-key $prefunded_pk -r $L1_RPC_URL
+    cast send $GS_CHALLENGER_ADDRESS --value 10000000000000000000000 --private-key $prefunded_pk -r $L1_RPC_URL
     # fund inbox for batcher account
-    cast send $INBOX_CONTRACT "deposit(address)" $GS_BATCHER_ADDRESS --value 10000000000000000000000 --private-key $op_batcher_pk -r $L1_RPC_URL
+    cast send $INBOX_CONTRACT "deposit(address)" $GS_BATCHER_ADDRESS --value 10000000000000000000000 --private-key $prefunded_pk -r $L1_RPC_URL
 }
 
 
@@ -387,10 +387,11 @@ if [ -z $start ]; then
             replace_env_value .envrc L1_RPC_URL "http://localhost:8645"
             replace_env_value .envrc L1_RPC_KIND standard
             replace_env_value .envrc L1_CHAIN_ID 900
-            # the private key here comes from op-batcher-key.txt
-            op_batcher_pk="bf7604d9d3a1c7748642b1b7b05c2bd219c9faa91458b370f85e5a40f3b03af7"
-            replace_env_value .envrc GS_ADMIN_PRIVATE_KEY $op_batcher_pk
-            replace_env_value .envrc GS_ADMIN_ADDRESS $(cast wallet address $op_batcher_pk)
+            # the private key here comes from [here](https://github.com/ethpandaops/optimism-package/blob/c993cd0b9716fb063c1e514e19374e27e1b10b3c/static_files/scripts/fund.sh#L64)
+            # also stored as l1FaucetPrivateKey in wallet.json of op-deployer-configs file artifact.
+            prefunded_pk="04b9f63ecf84210c5366c66d68fa1f5da1fa4f634fad6dfc86178e4d79ff9e59"
+            replace_env_value .envrc GS_ADMIN_PRIVATE_KEY $prefunded_pk
+            replace_env_value .envrc GS_ADMIN_ADDRESS $(cast wallet address $prefunded_pk)
             replace_env_value_or_insert .envrc L1_BEACON_URL "http://localhost:5052"
             replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL "http://localhost:5052"
         fi

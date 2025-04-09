@@ -354,13 +354,9 @@ if [ -z $start ]; then
     fi
     download_repo "blockscout" https://github.com/blockscout/blockscout production-optimism
 
-    # build contracts and binaries
+    # build binaries
     pushd optimism
 
-    pushd packages/contracts-bedrock/
-    forge clean
-    just build
-    popd
     just op-node/op-node
     just op-batcher/op-batcher 
     just op-proposer/op-proposer 
@@ -468,6 +464,15 @@ Press Enter after you funded."
     fi
 
     
+    # build contracts
+    read -p "Please enter your target tag or commit for contracts(leave blank for in-place code): " contractsTagOrCommit
+    if [ -n $contractsTagOrCommit ]; then
+        git checkout $contractsTagOrCommit
+    fi
+    pushd packages/contracts-bedrock/
+    forge clean
+    just build
+    popd
 
     # fill out op-deployer intent
     forgeArtifacts="$(pwd)/packages/contracts-bedrock/forge-artifacts/"

@@ -349,7 +349,9 @@ if [ -z $start ]; then
     # download repos
     download_repo "optimism" $optimism $optimismBranch
     download_repo "op-geth" $opgeth $opgethBranch
-    download_repo "da-server" https://github.com/ethstorage/da-server
+    if [ -n "${ES}" ]; then
+        download_repo "da-server" https://github.com/ethstorage/da-server
+    fi
     download_repo "blockscout" https://github.com/blockscout/blockscout production-optimism
 
     # build contracts and binaries

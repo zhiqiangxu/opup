@@ -124,6 +124,9 @@ function download_repo() {
             Y)
                 ;;
             n)
+                pushd $name
+                git checkout $branch
+                popd
                 return
                 ;;
             *)

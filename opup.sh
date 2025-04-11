@@ -22,8 +22,9 @@ if [ "$#" -ne 0 ]; then
     case $1 in
         da)
             cd da-server
+            save_to_session_history "go run main.go da start --config config.json"
             go run main.go da start --config config.json
-            prompt "Press Enter to quit..."
+            bash
             ;;
         geth)
             pushd optimism
@@ -35,12 +36,20 @@ if [ "$#" -ne 0 ]; then
             fi
             popd
             cd op-geth
+            save_to_session_history $(cat <<EOF
+            ./build/bin/geth --datadir ./datadir   --http   --http.corsdomain="*"   --http.vhosts="*"   --http.addr=0.0.0.0   \
+                             --http.api=web3,debug,eth,txpool,net,engine,miner   --ws   --ws.addr=0.0.0.0   --ws.port=8546   --ws.origins="*" \
+                             --ws.api=debug,eth,txpool,net,engine,miner   --syncmode=full   --gcmode=archive   --nodiscover   --maxpeers=0  \
+                             --networkid=$l2ChainID --authrpc.vhosts="*"   --authrpc.addr=0.0.0.0   --authrpc.port=8551   \
+                             $httpSGTParam --authrpc.jwtsecret=./jwt.txt  --rollup.disabletxpoolgossip=true  2>&1 | tee -a geth.log -i            
+EOF
+            )
             ./build/bin/geth --datadir ./datadir   --http   --http.corsdomain="*"   --http.vhosts="*"   --http.addr=0.0.0.0   \
                              --http.api=web3,debug,eth,txpool,net,engine,miner   --ws   --ws.addr=0.0.0.0   --ws.port=8546   --ws.origins="*" \
                              --ws.api=debug,eth,txpool,net,engine,miner   --syncmode=full   --gcmode=archive   --nodiscover   --maxpeers=0  \
                              --networkid=$l2ChainID --authrpc.vhosts="*"   --authrpc.addr=0.0.0.0   --authrpc.port=8551   \
                              $httpSGTParam --authrpc.jwtsecret=./jwt.txt  --rollup.disabletxpoolgossip=true  2>&1 | tee -a geth.log -i
-            prompt "Press Enter to quit..."
+            bash
             ;;
         node)
             cd optimism/op-node
@@ -50,6 +59,7 @@ if [ "$#" -ne 0 ]; then
                 dacParam="--dac.urls=http://localhost:8888"
             fi
             mkdir safedb
+            save_to_session_history $(cat <<EOF
             ./bin/op-node   --l2=http://localhost:8551   --l2.jwt-secret=./jwt.txt   --sequencer.enabled  \
                             --sequencer.l1-confs=5   --verifier.l1-confs=4   --rollup.config=./rollup.json \
                             --rpc.addr=0.0.0.0   --rpc.port=8547  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003\
@@ -57,17 +67,34 @@ if [ "$#" -ne 0 ]; then
                             --l1=$L1_RPC_URL   --l1.rpckind=$L1_RPC_KIND --l1.beacon=$L1_BEACON_URL \
                             --safedb.path=safedb \
                             $dacParam --l1.beacon-archiver=$L1_BEACON_ARCHIVER_URL 2>&1 | tee -a node.log -i
-            prompt "Press Enter to quit..."
+EOF
+            )            
+            ./bin/op-node   --l2=http://localhost:8551   --l2.jwt-secret=./jwt.txt   --sequencer.enabled  \
+                            --sequencer.l1-confs=5   --verifier.l1-confs=4   --rollup.config=./rollup.json \
+                            --rpc.addr=0.0.0.0   --rpc.port=8547  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003\
+                            --p2p.listen.udp=9003   --rpc.enable-admin   --p2p.sequencer.key=$GS_SEQUENCER_PRIVATE_KEY\
+                            --l1=$L1_RPC_URL   --l1.rpckind=$L1_RPC_KIND --l1.beacon=$L1_BEACON_URL \
+                            --safedb.path=safedb \
+                            $dacParam --l1.beacon-archiver=$L1_BEACON_ARCHIVER_URL 2>&1 | tee -a node.log -i
+            bash
             ;;
         batcher)
             cd optimism/op-batcher
             activate_direnv
+            save_to_session_history $(cat <<EOF
             ./bin/op-batcher   --l2-eth-rpc=http://localhost:8545   --rollup-rpc=http://localhost:8547   --poll-interval=1s   \
                                --sub-safety-margin=20   --num-confirmations=1   --safe-abort-nonce-too-low-count=3   --resubmission-timeout=30s\
                                --rpc.addr=0.0.0.0   --rpc.port=8548   --rpc.enable-admin      --l1-eth-rpc=$L1_RPC_URL   \
                                --private-key=$GS_BATCHER_PRIVATE_KEY --data-availability-type blobs \
                                --batch-type=1 --max-channel-duration=3600 --target-num-frames=5 2>&1 | tee -a batcher.log -i
-            prompt "Press Enter to quit..."
+EOF
+            )
+            ./bin/op-batcher   --l2-eth-rpc=http://localhost:8545   --rollup-rpc=http://localhost:8547   --poll-interval=1s   \
+                               --sub-safety-margin=20   --num-confirmations=1   --safe-abort-nonce-too-low-count=3   --resubmission-timeout=30s\
+                               --rpc.addr=0.0.0.0   --rpc.port=8548   --rpc.enable-admin      --l1-eth-rpc=$L1_RPC_URL   \
+                               --private-key=$GS_BATCHER_PRIVATE_KEY --data-availability-type blobs \
+                               --batch-type=1 --max-channel-duration=3600 --target-num-frames=5 2>&1 | tee -a batcher.log -i
+            bash
             ;;
         proposer)
             pushd optimism/op-deployer
@@ -76,16 +103,24 @@ if [ "$#" -ne 0 ]; then
             popd
             cd optimism/op-proposer
             activate_direnv
+            save_to_session_history $(cat <<EOF
             ./bin/op-proposer --poll-interval=12s --rpc.port=8560 --rollup-rpc=http://localhost:8547 \
                               --game-factory-address=$gameFactoryAddr \
                               --proposal-interval 12h --game-type 1\
                               --private-key=$GS_PROPOSER_PRIVATE_KEY --l1-eth-rpc=$L1_RPC_URL 2>&1 | tee -a proposer.log -i
-            prompt "Press Enter to quit..."
+EOF
+            )
+            ./bin/op-proposer --poll-interval=12s --rpc.port=8560 --rollup-rpc=http://localhost:8547 \
+                              --game-factory-address=$gameFactoryAddr \
+                              --proposal-interval 12h --game-type 1\
+                              --private-key=$GS_PROPOSER_PRIVATE_KEY --l1-eth-rpc=$L1_RPC_URL 2>&1 | tee -a proposer.log -i
+            bash
             ;;
         blockscout)
             cd blockscout/docker-compose
+            save_to_session_history "DOCKER_REPO=blockscout-optimism docker compose -f geth.yml up"
             DOCKER_REPO=blockscout-optimism docker compose -f geth.yml up
-            prompt "Press Enter to quit..."
+            bash
             ;;
         --es)
             export ES=true

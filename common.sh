@@ -47,3 +47,9 @@ function start_op_services() {
 function start_explorer() {
     screen -d -m -S "blockscout" bash -c "$opup_script_path blockscout"
 }
+
+function save_to_session_history() {
+    local session=${STY##*.}
+    local cmd=$1
+    echo $cmd >> "$session.history"
+}

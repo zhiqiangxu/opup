@@ -118,8 +118,8 @@ EOF
             ;;
         blockscout)
             cd blockscout/docker-compose
-            save_to_session_history "DOCKER_REPO=blockscout-optimism docker compose -f geth.yml up"
-            DOCKER_REPO=blockscout-optimism docker compose -f geth.yml up
+            save_to_session_history "DOCKER_REPO=blockscout-optimism docker compose -f geth.yml up 2>&1 > blockscout.log"
+            DOCKER_REPO=blockscout-optimism docker compose -f geth.yml up 2>&1 > blockscout.log
             bash
             ;;
         --es)

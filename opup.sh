@@ -239,6 +239,7 @@ function deploy_explorer() {
 Press Enter to continue..."
     
     pushd blockscout
+    replace_env_value docker-compose/envs/common-blockscout.env "CHAIN_ID" $L2_CHAIN_ID
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_API_HOST" $hostIP
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_STATS_API_HOST" "http://$hostIP:8080"
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_APP_HOST" $hostIP

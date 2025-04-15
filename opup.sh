@@ -455,7 +455,7 @@ if [ -z $start ]; then
             replace_env_value_or_insert .envrc L1_BEACON_URL "http://88.99.30.186:3500"
             replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL "http://65.108.236.27:9645"
         else
-            replace_env_value .envrc L1_RPC_URL $(kurtosis port print simple-devnet el-1-geth-teku rpc)
+            replace_env_value .envrc L1_RPC_URL "http://$(kurtosis port print simple-devnet el-1-geth-teku rpc)"
             replace_env_value .envrc L1_RPC_KIND standard
             replace_env_value .envrc L1_CHAIN_ID $(cast chain-id -r $(kurtosis port print simple-devnet el-1-geth-teku rpc))
             # the private key here comes from [here](https://github.com/ethpandaops/optimism-package/blob/c993cd0b9716fb063c1e514e19374e27e1b10b3c/static_files/scripts/fund.sh#L64)

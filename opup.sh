@@ -542,7 +542,7 @@ Press Enter after you funded."
     if [ -n $contractsTagOrCommit ]; then
         git checkout $contractsTagOrCommit
         if [[ -n "${ES}" && -n "${LOCAL_L1}" ]]; then
-            git cherrypick --no-commit 6b16bfb09e54b304ee49e068206af1fa7b24afd9
+            git cherry-pick --no-commit 6b16bfb09e54b304ee49e068206af1fa7b24afd9
             replace_all packages/contracts-bedrock/src/libraries/Constants.sol 0xe6ABD81D16a20606a661D4e075cdE5734AB62519 $CGT_CONTRACT
         fi
     fi

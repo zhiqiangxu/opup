@@ -15,6 +15,10 @@ function activate_direnv() {
     eval "$(direnv export bash)"
 }
 
+function activate_mise() {
+    eval "$(mise activate bash)"
+}
+
 
 # dispatch for subcommands if specified
 if [ "$#" -ne 0 ]; then
@@ -423,6 +427,7 @@ if [ -z $start ]; then
 
     # build binaries
     pushd optimism
+    activate_mise
     mise install
 
     just op-node/op-node

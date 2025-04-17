@@ -546,7 +546,7 @@ Press Enter after you funded."
             pushd op-deployer
             mv bin/op-deployer bin/op-deployer.bak
             just build
-            local temp=$(mktemp)
+            temp=$(mktemp)
             mv bin/op-deployer $temp
             mv bin/op-deployer.bak bin/op-deployer
             # op-deployer.bak is corresponding to opDeployerTagOrCommit

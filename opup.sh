@@ -540,6 +540,19 @@ Press Enter after you funded."
     # build contracts
     read -p "Please enter your target tag or commit for contracts(leave blank for in-place code): " contractsTagOrCommit
     if [ -n $contractsTagOrCommit ]; then
+        read -p "Please enter your target tag or commit for op-deployer(leave blank for in-place code): " opDeployerTagOrCommit
+        if [ -n $opDeployerTagOrCommit ]; then
+            git checkout $opDeployerTagOrCommit
+            pushd op-deployer
+            mv bin/op-deployer bin/op-deployer.bak
+            just build
+            local temp=$(mktemp)
+            mv bin/op-deployer $temp
+            mv bin/op-deployer.bak bin/op-deployer
+            # op-deployer.bak is corresponding to opDeployerTagOrCommit
+            mv $temp bin/op-deployer.bak
+            popd
+        fi
         git checkout $contractsTagOrCommit
         if [[ -n "${ES}" && -n "${LOCAL_L1}" ]]; then
             git cherry-pick --no-commit 6b16bfb09e54b304ee49e068206af1fa7b24afd9
@@ -624,7 +637,14 @@ Press Enter to continue..."
 
     prompt "Now we're ready to apply op-deployer intent config.
 Press Enter to continue..."
-    ./bin/op-deployer apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY  --deployment-target live
+    if [ -n $opDeployerTagOrCommit ]; then
+        ./bin/op-deployer.bak apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY  --deployment-target live
+        # op-deployer.bak is only used for apply, so it's safe to delete it
+        rm -f bin/op-deployer.bak
+    else
+        ./bin/op-deployer apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY  --deployment-target live
+    fi
+    
 
     # generate the L2 config files(genesis.json/rollup.json/jwt.txt)
     prompt "Now generate the L2 config files(genesis.json/rollup.json/jwt.txt)...

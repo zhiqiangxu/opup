@@ -555,11 +555,18 @@ Press Enter after you funded."
             popd
         fi
         git checkout $contractsTagOrCommit
-        if [[ -n "${ES}" && -n "${LOCAL_L1}" ]]; then
-            git cherry-pick --no-commit 6b16bfb09e54b304ee49e068206af1fa7b24afd9
-            replace_all packages/contracts-bedrock/src/libraries/Constants.sol 0xe6ABD81D16a20606a661D4e075cdE5734AB62519 $CGT_CONTRACT
-        fi
         git submodule update --init --recursive
+        if [[ -n "${ES}" && -n "${LOCAL_L1}" ]]; then
+            read -p "Do you want to apply the CGT patch? Y/n " answer
+            if [ -z "$answer" ]; then
+                answer="Y"
+            fi
+            if [ "$answer" = "Y" ]; then
+                # apply CGT patch
+                git cherry-pick --no-commit 6b16bfb09e54b304ee49e068206af1fa7b24afd9
+                replace_all packages/contracts-bedrock/src/libraries/Constants.sol 0xe6ABD81D16a20606a661D4e075cdE5734AB62519 $CGT_CONTRACT
+            fi
+        fi
     fi
     pushd packages/contracts-bedrock/
     forge clean
@@ -640,6 +647,7 @@ Press Enter to continue..."
     prompt "Now we're ready to apply op-deployer intent config.
 Press Enter to continue..."
     if [ -n $opDeployerTagOrCommit ]; then
+        echo "Using op-deployer version $opDeployerTagOrCommit"
         ./bin/op-deployer.bak apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY  --deployment-target live
         # op-deployer.bak is only used for apply, so it's safe to delete it
         rm -f bin/op-deployer.bak

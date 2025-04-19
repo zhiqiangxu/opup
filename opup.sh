@@ -545,13 +545,7 @@ Press Enter after you funded."
         if [ -n $opDeployerTagOrCommit ]; then
             git checkout $opDeployerTagOrCommit
             pushd op-deployer
-            mv bin/op-deployer bin/op-deployer.bak
             just build
-            temp=$(mktemp)
-            mv bin/op-deployer $temp
-            mv bin/op-deployer.bak bin/op-deployer
-            # op-deployer.bak is corresponding to opDeployerTagOrCommit
-            mv $temp bin/op-deployer.bak
             popd
         fi
         git checkout $contractsTagOrCommit
@@ -646,15 +640,7 @@ Press Enter to continue..."
 
     prompt "Now we're ready to apply op-deployer intent config.
 Press Enter to continue..."
-    if [ -n $opDeployerTagOrCommit ]; then
-        echo "Using op-deployer version $opDeployerTagOrCommit"
-        ./bin/op-deployer.bak apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY  --deployment-target live
-        # op-deployer.bak is only used for apply, so it's safe to delete it
-        rm -f bin/op-deployer.bak
-    else
-        ./bin/op-deployer apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY  --deployment-target live
-    fi
-    
+    ./bin/op-deployer apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY  --deployment-target live
 
     # generate the L2 config files(genesis.json/rollup.json/jwt.txt)
     prompt "Now generate the L2 config files(genesis.json/rollup.json/jwt.txt)...

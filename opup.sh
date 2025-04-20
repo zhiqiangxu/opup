@@ -396,6 +396,25 @@ Press Enter to continue..."
     cast send $INBOX_CONTRACT "deposit(address)" $GS_BATCHER_ADDRESS --value 10000000000000000000000 --private-key $prefunded_pk -r $L1_RPC_URL
 }
 
+function op_deployer_init() {
+    if [ -z $(./bin/op-deployer init --help|grep intent-config-type) ]; then
+        # old version
+        ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer --deployment-strategy live
+    else
+        # new version
+        ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer --intent-config-type custom
+    fi
+}
+
+function op_deployer_apply() {
+    if [ -z $(./bin/op-deployer init --help|grep intent-config-type) ]; then
+        # old version
+        ./bin/op-deployer apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY
+    else
+        # new version
+        ./bin/op-deployer apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY --deployment-target live
+    fi
+}
 
 if [ -z $start ]; then
     if [ -n "${ES}" ]; then
@@ -581,7 +600,7 @@ Press Enter after you funded."
     fi
 
     if [ "$answer" = "Y" ]; then
-        ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer --intent-config-type custom
+        op_deployer_init
 
         replace_toml_value .deployer/intent.toml l1ChainID $L1_CHAIN_ID
         replace_toml_value .deployer/intent.toml l1ContractsLocator  $(quote_string "file://$forgeArtifacts")
@@ -640,7 +659,7 @@ Press Enter to continue..."
 
     prompt "Now we're ready to apply op-deployer intent config.
 Press Enter to continue..."
-    ./bin/op-deployer apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY  --deployment-target live
+    op_deployer_apply
 
     # generate the L2 config files(genesis.json/rollup.json/jwt.txt)
     prompt "Now generate the L2 config files(genesis.json/rollup.json/jwt.txt)...

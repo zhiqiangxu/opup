@@ -397,6 +397,7 @@ Press Enter to continue..."
 }
 
 function op_deployer_init() {
+    rm -rf .deployer/*
     if [ -z $(./bin/op-deployer init --help|grep intent-config-type) ]; then
         # old version
         ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer --deployment-strategy live

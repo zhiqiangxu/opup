@@ -564,11 +564,13 @@ Press Enter after you funded."
         read -p "Please enter your target tag or commit for op-deployer(leave blank for in-place code): " opDeployerTagOrCommit
         if [ -n $opDeployerTagOrCommit ]; then
             git checkout $opDeployerTagOrCommit
+            mise install
             pushd op-deployer
             just build
             popd
         fi
         git checkout $contractsTagOrCommit
+        mise install
         git submodule update --init --recursive
         if [[ -n "${ES}" && -n "${LOCAL_L1}" ]]; then
             read -p "Do you want to apply the CGT patch? Y/n " answer

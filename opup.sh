@@ -244,6 +244,8 @@ Press Enter to continue..."
     
     pushd blockscout
     replace_env_value docker-compose/envs/common-blockscout.env "CHAIN_ID" $L2_CHAIN_ID
+    replace_env_value docker-compose/envs/common-blockscout.env "NFT_MEDIA_HANDLER_ENABLED" "false"
+    replace_string docker-compose/envs/common-blockscout.env "# CHAIN_TYPE=" "CHAIN_TYPE=optimism"
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_API_HOST" $hostIP
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_STATS_API_HOST" "http://$hostIP:8080"
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_APP_HOST" $hostIP
@@ -275,6 +277,14 @@ function replace_toml_value() {
     key=$2
     value=$3
     sed_replace "s#$key = .*#$key = $value#" $file
+}
+
+function replace_string() {
+    local file=$1
+    local a=$2
+    local b=$3
+    local separator="${4:-/}"
+    sed_replace "s$separator$a$separator$b$separator" $file
 }
 
 function replace_env_value() {

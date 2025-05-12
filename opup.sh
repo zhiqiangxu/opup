@@ -11,10 +11,6 @@ function prompt() {
     read
 }
 
-function activate_direnv() {
-    eval "$(direnv export bash)"
-}
-
 function activate_mise() {
     eval "$(mise activate bash)"
 }
@@ -216,11 +212,6 @@ Press Enter after you funded."
     fi
 }
 
-function open_with_lineno() {
-    f=$1
-    vi -c "set number" $f
-}
-
 function edit_envrc_and_approve() {
     open_with_lineno .envrc
     direnv allow
@@ -233,35 +224,6 @@ function initialize_op_geth() {
     mkdir datadir
     build/bin/geth init --datadir=datadir  --state.scheme hash genesis.json
     popd
-}
-
-function deploy_explorer() {
-
-    echo "Ready to deploy explorer..."
-    hostIP=$(ip route get 8.8.8.8 | awk '{print $7; exit}')
-    prompt "Please review the environment variables in "common-frontend.env", finish by quiting the editor.
-Press Enter to continue..."
-    
-    pushd blockscout
-    replace_env_value docker-compose/envs/common-blockscout.env "CHAIN_ID" $L2_CHAIN_ID
-    replace_env_value docker-compose/envs/common-blockscout.env "NFT_MEDIA_HANDLER_ENABLED" "false"
-    replace_string docker-compose/envs/common-blockscout.env "# CHAIN_TYPE=" "CHAIN_TYPE=optimism"
-    replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_API_HOST" $hostIP
-    replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_STATS_API_HOST" "http://$hostIP:8080"
-    replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_APP_HOST" $hostIP
-    replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_ID" $L2_CHAIN_ID
-    replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_VISUALIZE_API_HOST" "http://$hostIP:8081"
-    replace_env_value_or_insert docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_RPC_URL" "http://$hostIP:8545"
-    replace_all docker-compose/proxy/default.conf.template "add_header 'Access-Control-Allow-Origin' 'http://localhost' always;" "add_header 'Access-Control-Allow-Origin' '*' always;"
-    if [ -n "${ES}" ]; then
-        replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_CURRENCY_NAME" QKC
-        replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_CURRENCY_SYMBOL" QKC
-        replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_NAME" "Super world computer"
-        replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_SHORT_NAME" "Super world computer"
-    fi
-    open_with_lineno docker-compose/envs/common-frontend.env
-    popd
-    start_explorer
 }
 
 function quote_string() {
@@ -277,50 +239,6 @@ function replace_toml_value() {
     key=$2
     value=$3
     sed_replace "s#$key = .*#$key = $value#" $file
-}
-
-function replace_string() {
-    local file=$1
-    local a=$2
-    local b=$3
-    local separator="${4:-/}"
-    sed_replace "s$separator$a$separator$b$separator" $file
-}
-
-function replace_env_value() {
-    file=$1
-    key=$2
-    value=$3
-    sed_replace "s#$key=.*#$key=$value#" $file
-}
-
-# for compatibility between macOS and linux
-function sed_replace() {
-    cmd=$1
-    file=$2
-    if [[ "$(uname)" == "Linux" ]]; then
-        sed -i "$cmd" $file
-    else
-        sed -i '' "$cmd" $file
-    fi
-}
-
-function replace_env_value_or_insert() {
-    file=$1
-    key=$2
-    value=$3
-    sed_replace "s#$key=.*#$key=$value#" $file
-    
-    if ! grep -q "$key=" $file; then
-	    echo "export $key=$value" >> $file
-    fi
-}
-
-function replace_all() {
-    file=$1
-    a=$2
-    b=$3
-    sed_replace "s#$a#$b#g" $file
 }
 
 function install_npm() {
@@ -706,7 +624,8 @@ if [ -n "${ES}" ]; then
     start_da_server
 fi
 start_op_services
-deploy_explorer
+config_explorer
+start_explorer
 
 
 

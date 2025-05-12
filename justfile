@@ -16,5 +16,8 @@ l1:
 update_op_bins:
     ./update_op_bins.sh
 
+config_explorer:
+    ./config_explorer.sh
+
 version:
     @echo "OP version: 750ed20"

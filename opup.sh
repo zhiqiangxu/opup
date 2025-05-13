@@ -259,7 +259,9 @@ function install_npm() {
 }
 # deploy storage/inbox/gas token contracts and fund accounts
 function deploy_es_contracts_and_fund_accounts_for_local_l1() {
-    
+    mkdir -p ~/.config/mise/conf.d/
+    cp mise.toml ~/.config/mise/conf.d/extras.toml
+    activate_mise
     pushd ..
     prompt "Next we'll deploy storage/inbox/gas token contracts.
 Press Enter to continue..."

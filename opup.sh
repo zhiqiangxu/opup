@@ -435,6 +435,12 @@ Press Enter to continue"
 Press Enter to continue"
             continue
         fi
+        # ensure L2_CHAIN_ID is set
+        if [ -z "${L2_CHAIN_ID}" ]; then
+            prompt "Please configure L2_CHAIN_ID.
+Press Enter to continue"
+            continue
+        fi
         # ensure L1_CHAIN_ID is consistent with L1_RPC_URL
         if [ -z "${L1_RPC_URL}" ]; then
             prompt "Please configure L1_RPC_URL.

@@ -130,6 +130,15 @@ Press Enter to continue..."
         replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_SHORT_NAME" "Super world computer"
     fi
     open_with_lineno docker-compose/envs/common-frontend.env
+
+    # if 8081(kurtosis uses this port) is already in use, switch to 8088 instead
+    # TODO make it more clever maybe
+    if netstat -tuln | grep ":8081"; then
+        replace_all docker-compose/envs/common-frontend.env 8081 8088
+        replace_all docker-compose/proxy/default.conf.template 8081 8088
+        replace_all docker-compose/proxy/microservices.conf.template 8081 8088
+        replace_all docker-compose/services/nginx.yml 8081 8088
+    fi
     popd
 }
 

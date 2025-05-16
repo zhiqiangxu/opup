@@ -20,4 +20,4 @@ config_explorer:
     ./config_explorer.sh
 
 version:
-    @echo "OP version: 750ed20"
+    @echo "OP version: c8b9f62"

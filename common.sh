@@ -144,6 +144,5 @@ Press Enter to continue..."
 
 function save_to_session_history() {
     local session=${STY##*.}
-    local cmd=$1
-    echo $cmd >> "$session.history"
+    echo "$@" >> "$session.history"
 }

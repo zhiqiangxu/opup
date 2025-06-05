@@ -294,17 +294,6 @@ PRIVATE_KEY=$prefunded_pk" > .env
     read -p "Please enter inbox contract address printed above: " INBOX_CONTRACT
     cd ..
 
-    # deploy gas token contract
-    download_repo izar-contracts https://github.com/zhiqiangxu/izar-contracts
-    cd izar-contracts
-    echo "Deploying gas token contract ..."
-    forge create src/misc/MintAllERC20.sol:MintAllERC20  \
-            --broadcast \
-            --private-key $prefunded_pk \
-            --rpc-url $L1_RPC_URL \
-            --constructor-args "QKC" "QKC" 10000000000000000000000000000000
-    read -p "Please enter gas token contract address printed above: " CGT_CONTRACT
-    cd ..
     popd
 
     # check that GS_ADMIN_PRIVATE_KEY == prefunded_pk
@@ -508,17 +497,6 @@ Press Enter after you funded."
         git checkout $contractsTagOrCommit
         mise install
         git submodule update --init --recursive
-        if [[ -n "${ES}" && -n "${LOCAL_L1}" ]]; then
-            read -p "Do you want to apply the CGT patch? Y/n " answer
-            if [ -z "$answer" ]; then
-                answer="Y"
-            fi
-            if [ "$answer" = "Y" ]; then
-                # apply CGT patch
-                git cherry-pick --no-commit 6b16bfb09e54b304ee49e068206af1fa7b24afd9
-                replace_all packages/contracts-bedrock/src/libraries/Constants.sol 0xe6ABD81D16a20606a661D4e075cdE5734AB62519 $CGT_CONTRACT
-            fi
-        fi
     fi
     pushd packages/contracts-bedrock/
     forge clean
@@ -563,9 +541,6 @@ Press Enter after you funded."
 
         if [ -n "${ES}" ]; then
             if ! grep -q "\[globalDeployOverrides\]" .deployer/intent.toml; then
-                if [ -z $CGT_CONTRACT ]; then
-                    CGT_CONTRACT="0xe6ABD81D16a20606a661D4e075cdE5734AB62519"
-                fi
                 if [ -z $INBOX_CONTRACT ]; then
                     INBOX_CONTRACT="0x27504265a9bc4330e3fe82061a60cd8b6369b4dc"
                 fi
@@ -576,7 +551,6 @@ Press Enter after you funded."
   soulGasTokenBlock = 0
   isSoulBackedByNative = true
   useCustomGasToken = true
-  customGasTokenAddress = "$CGT_CONTRACT"
   batchInboxAddress = "$INBOX_CONTRACT"
   l2GenesisBlobTimeOffset = "0x0"
   sequencerWindowSize = 7200

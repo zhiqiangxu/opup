@@ -550,7 +550,6 @@ Press Enter after you funded."
   useSoulGasToken = true
   soulGasTokenBlock = 0
   isSoulBackedByNative = true
-  useCustomGasToken = true
   batchInboxAddress = "$INBOX_CONTRACT"
   l2GenesisBlobTimeOffset = "0x0"
   sequencerWindowSize = 7200

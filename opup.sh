@@ -390,9 +390,9 @@ if [ -z $start ]; then
 
     if [ -n "${ES}" ]; then
         if [ -z $LOCAL_L1 ]; then
-            replace_env_value .envrc L1_RPC_URL "http://88.99.30.186:8545"
+            replace_env_value .envrc L1_RPC_URL "http://65.108.230.142:8545"
             replace_env_value .envrc L1_RPC_KIND standard
-            replace_env_value_or_insert .envrc L1_BEACON_URL "http://88.99.30.186:3500"
+            replace_env_value_or_insert .envrc L1_BEACON_URL "http://65.108.230.142:3500"
             replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL "http://65.108.236.27:9645"
         else
             replace_env_value .envrc L1_RPC_URL "http://$(kurtosis port print simple-devnet el-1-geth-teku rpc)"

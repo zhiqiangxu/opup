@@ -544,6 +544,8 @@ Press Enter after you funded."
                 if [ -z $INBOX_CONTRACT ]; then
                     INBOX_CONTRACT="0x27504265a9bc4330e3fe82061a60cd8b6369b4dc"
                 fi
+                read -p "Please enter L1BaseFeeScalarMultiplier: " L1BaseFeeScalarMultiplier
+                read -p "Please enter L1BlobBaseFeeScalarMultiplier: " L1BlobBaseFeeScalarMultiplier
                 cat <<EOF >> .deployer/intent.toml
 [globalDeployOverrides]
   useInboxContract = true
@@ -551,6 +553,8 @@ Press Enter after you funded."
   soulGasTokenBlock = 0
   isSoulBackedByNative = true
   batchInboxAddress = "$INBOX_CONTRACT"
+  l1BaseFeeScalarMultiplier = ${L1BaseFeeScalarMultiplier:-"0"}
+  l1BlobBaseFeeScalarMultiplier = ${L1BlobBaseFeeScalarMultiplier:-"0"}
   l2GenesisBlobTimeOffset = "0x0"
   sequencerWindowSize = 7200
 EOF

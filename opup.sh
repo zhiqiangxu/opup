@@ -317,23 +317,13 @@ Press Enter to continue..."
 
 function op_deployer_init() {
     rm -rf .deployer/*
-    if [ -z $(./bin/op-deployer init --help|grep intent-config-type) ]; then
-        # old version
-        ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer --deployment-strategy live
-    else
-        # new version
-        ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer --intent-config-type custom
-    fi
+    # new version
+    ./bin/op-deployer init --l1-chain-id $L1_CHAIN_ID --l2-chain-ids $L2_CHAIN_ID --workdir .deployer --intent-config-type custom
 }
 
 function op_deployer_apply() {
-    if [ -z $(./bin/op-deployer init --help|grep intent-config-type) ]; then
-        # old version
-        ./bin/op-deployer apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY
-    else
-        # new version
-        ./bin/op-deployer apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY --deployment-target live
-    fi
+    # new version
+    ./bin/op-deployer apply --workdir .deployer --l1-rpc-url $L1_RPC_URL --private-key $GS_ADMIN_PRIVATE_KEY --deployment-target live
 }
 
 if [ -z $start ]; then

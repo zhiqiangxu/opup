@@ -127,6 +127,11 @@ Press Enter to continue..."
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_ID" $l2ChainID
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_VISUALIZE_API_HOST" "http://$hostIP:8081"
     replace_env_value_or_insert docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_RPC_URL" "http://$hostIP:8545" 1
+    # FYI, these 3 envs are necessary to show L1 fee: https://github.com/blockscout/frontend/blob/main/docs/ENVS.md#rollup-chain
+    replace_env_value_or_insert docker-compose/envs/common-frontend.env "NEXT_PUBLIC_ROLLUP_TYPE" "'optimistic'" 1
+    # TODO set real value for NEXT_PUBLIC_ROLLUP_L2_WITHDRAWAL_URL
+    replace_env_value_or_insert docker-compose/envs/common-frontend.env "NEXT_PUBLIC_ROLLUP_L2_WITHDRAWAL_URL" "https://example.com" 1
+    replace_env_value_or_insert docker-compose/envs/common-frontend.env "NEXT_PUBLIC_ROLLUP_L1_BASE_URL" "https://sepolia.etherscan.io/" 1
     replace_all docker-compose/proxy/default.conf.template "add_header 'Access-Control-Allow-Origin' 'http://localhost' always;" "add_header 'Access-Control-Allow-Origin' '*' always;"
     if [ -n "${ES}" ]; then
         replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_CURRENCY_NAME" QKC

@@ -85,7 +85,12 @@ function replace_env_value_or_insert() {
     sed_replace "s#$key=.*#$key=$value#" $file
     
     if ! grep -q "$key=" $file; then
-	    echo "export $key=$value" >> $file
+        # if the 4th parameter is set, do not export
+        if [ -n "$4" ]; then
+            echo "$key=$value" >> $file
+        else
+            echo "export $key=$value" >> $file
+        fi
     fi
 }
 
@@ -121,7 +126,7 @@ Press Enter to continue..."
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_APP_HOST" $hostIP
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_ID" $l2ChainID
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_VISUALIZE_API_HOST" "http://$hostIP:8081"
-    replace_env_value_or_insert docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_RPC_URL" "http://$hostIP:8545"
+    replace_env_value_or_insert docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_RPC_URL" "http://$hostIP:8545" 1
     replace_all docker-compose/proxy/default.conf.template "add_header 'Access-Control-Allow-Origin' 'http://localhost' always;" "add_header 'Access-Control-Allow-Origin' '*' always;"
     if [ -n "${ES}" ]; then
         replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_NETWORK_CURRENCY_NAME" QKC

@@ -81,18 +81,19 @@ EOF
         batcher)
             cd optimism/op-batcher
             activate_direnv
+            pkflags=$(batcher_pk_flags)
             save_to_session_history $(cat <<EOF
             ./bin/op-batcher   --l2-eth-rpc=http://localhost:8545   --rollup-rpc=http://localhost:8547   --poll-interval=1s   \
                                --sub-safety-margin=20   --num-confirmations=1   --safe-abort-nonce-too-low-count=3   --resubmission-timeout=30s\
                                --rpc.addr=0.0.0.0   --rpc.port=8548   --rpc.enable-admin      --l1-eth-rpc=$L1_RPC_URL   \
-                               --private-key=$GS_BATCHER_PRIVATE_KEY --data-availability-type blobs \
+                               $pkflags --data-availability-type blobs \
                                --batch-type=1 --max-channel-duration=3600 --target-num-frames=5 2>&1 | tee -a batcher.log -i
 EOF
             )
             ./bin/op-batcher   --l2-eth-rpc=http://localhost:8545   --rollup-rpc=http://localhost:8547   --poll-interval=1s   \
                                --sub-safety-margin=20   --num-confirmations=1   --safe-abort-nonce-too-low-count=3   --resubmission-timeout=30s\
                                --rpc.addr=0.0.0.0   --rpc.port=8548   --rpc.enable-admin      --l1-eth-rpc=$L1_RPC_URL   \
-                               --private-key=$GS_BATCHER_PRIVATE_KEY --data-availability-type blobs \
+                               $pkflags --data-availability-type blobs \
                                --batch-type=1 --max-channel-duration=3600 --target-num-frames=5 2>&1 | tee -a batcher.log -i
             bash
             ;;
@@ -103,17 +104,18 @@ EOF
             popd
             cd optimism/op-proposer
             activate_direnv
+            pkflags=$(proposer_pk_flags)
             save_to_session_history $(cat <<EOF
             ./bin/op-proposer --poll-interval=12s --rpc.port=8560 --rollup-rpc=http://localhost:8547 \
                               --game-factory-address=$gameFactoryAddr \
                               --proposal-interval 12h --game-type 1\
-                              --private-key=$GS_PROPOSER_PRIVATE_KEY --l1-eth-rpc=$L1_RPC_URL 2>&1 | tee -a proposer.log -i
+                              $pkflags --l1-eth-rpc=$L1_RPC_URL 2>&1 | tee -a proposer.log -i
 EOF
             )
             ./bin/op-proposer --poll-interval=12s --rpc.port=8560 --rollup-rpc=http://localhost:8547 \
                               --game-factory-address=$gameFactoryAddr \
                               --proposal-interval 12h --game-type 1\
-                              --private-key=$GS_PROPOSER_PRIVATE_KEY --l1-eth-rpc=$L1_RPC_URL 2>&1 | tee -a proposer.log -i
+                              $pkflags --l1-eth-rpc=$L1_RPC_URL 2>&1 | tee -a proposer.log -i
             bash
             ;;
         blockscout)
@@ -442,10 +444,32 @@ Press Enter to continue..."
         fi
     done
 
+    if [[ -n "${REMOTE_SIGNER}" ]]; then
+        read -p "Please enter the full path of remote_signers.json: " REMOTE_SIGNERS_JSON
+        # to make it accessible in child process
+        export REMOTE_SIGNERS_JSON
+        if jq -e '. | has("admin") and has("batcher") and has("proposer") and has("challenger")' $REMOTE_SIGNERS_JSON > /dev/null; then
+        else
+            echo "remote_signers.json is not valid, please check it."
+            exit 1
+        fi
+    fi
+
     # fill out ".envrc": wallets
     ./packages/contracts-bedrock/scripts/getting-started/wallets.sh
 
-    if [[ -n "${ES}" && -n "${LOCAL_L1}" ]]; then
+    # TODO: LOCAL_L1 and ES are kind of coupled now, needs to de-couple
+    if [[ -n "${REMOTE_SIGNER}" ]]; then
+        if [[ -n "${LOCAL_L1}" ]]; then
+            echo "can not specify both REMOTE_SIGNER and LOCAL_L1."
+            exit 1
+        else
+            prompt "
+Please copy the above "Admin account" and "Sequencer account" only, next we'll fill it into .envrc.
+
+
+Press Enter to continue..."
+    elif [[ -n "${ES}" && -n "${LOCAL_L1}" ]]; then
         prompt "
 Please copy the above(*except the Admin account*), next we'll fill it into .envrc.
 
@@ -509,22 +533,26 @@ Press Enter after you funded."
     if [ "$answer" = "Y" ]; then
         op_deployer_init
 
+        admin=$(admin_address)
+        batcher=$(batcher_address)
+        proposer=$(proposer_address)
+        challenger=$(challenger_address)
         replace_toml_value .deployer/intent.toml l1ChainID $L1_CHAIN_ID
         replace_toml_value .deployer/intent.toml l1ContractsLocator  $(quote_string "file://$forgeArtifacts")
         replace_toml_value .deployer/intent.toml l2ContractsLocator $(quote_string "file://$forgeArtifacts")
-        replace_toml_value .deployer/intent.toml proxyAdminOwner $(quote_string $GS_ADMIN_ADDRESS)
-        replace_toml_value .deployer/intent.toml protocolVersionsOwner $(quote_string $GS_ADMIN_ADDRESS)
-        replace_toml_value .deployer/intent.toml guardian $(quote_string $GS_ADMIN_ADDRESS)
-        replace_toml_value .deployer/intent.toml baseFeeVaultRecipient $(quote_string $GS_ADMIN_ADDRESS)
-        replace_toml_value .deployer/intent.toml l1FeeVaultRecipient $(quote_string $GS_ADMIN_ADDRESS)
-        replace_toml_value .deployer/intent.toml sequencerFeeVaultRecipient $(quote_string $GS_ADMIN_ADDRESS)
-        replace_toml_value .deployer/intent.toml l1ProxyAdminOwner $(quote_string $GS_ADMIN_ADDRESS)
-        replace_toml_value .deployer/intent.toml l2ProxyAdminOwner $(quote_string $GS_ADMIN_ADDRESS)
-        replace_toml_value .deployer/intent.toml systemConfigOwner $(quote_string $GS_ADMIN_ADDRESS)
+        replace_toml_value .deployer/intent.toml proxyAdminOwner $(quote_string $admin))
+        replace_toml_value .deployer/intent.toml protocolVersionsOwner $(quote_string $admin))
+        replace_toml_value .deployer/intent.toml guardian $(quote_string $admin)
+        replace_toml_value .deployer/intent.toml baseFeeVaultRecipient $(quote_string $admin)
+        replace_toml_value .deployer/intent.toml l1FeeVaultRecipient $(quote_string $admin)
+        replace_toml_value .deployer/intent.toml sequencerFeeVaultRecipient $(quote_string $admin)
+        replace_toml_value .deployer/intent.toml l1ProxyAdminOwner $(quote_string $admin)
+        replace_toml_value .deployer/intent.toml l2ProxyAdminOwner $(quote_string $admin)
+        replace_toml_value .deployer/intent.toml systemConfigOwner $(quote_string $admin)
         replace_toml_value .deployer/intent.toml unsafeBlockSigner $(quote_string $GS_SEQUENCER_ADDRESS)
-        replace_toml_value .deployer/intent.toml batcher $(quote_string $GS_BATCHER_ADDRESS)
-        replace_toml_value .deployer/intent.toml proposer $(quote_string $GS_PROPOSER_ADDRESS)
-        replace_toml_value .deployer/intent.toml challenger $(quote_string $GS_CHALLENGER_ADDRESS)
+        replace_toml_value .deployer/intent.toml batcher $(quote_string $batcher)
+        replace_toml_value .deployer/intent.toml proposer $(quote_string $proposer)
+        replace_toml_value .deployer/intent.toml challenger $(quote_string $challenger)
         replace_toml_value .deployer/intent.toml eip1559DenominatorCanyon 250
         replace_toml_value .deployer/intent.toml eip1559Denominator 50
         replace_toml_value .deployer/intent.toml eip1559Elasticity 6

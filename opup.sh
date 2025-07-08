@@ -465,7 +465,7 @@ Press Enter to continue..."
             exit 1
         else
             prompt "
-Please copy the above "Admin account" and "Sequencer account" only, next we'll fill it into .envrc.
+Please copy the above "Admin account"(only used by op-deployer to send tx) and "Sequencer account" only, next we'll fill it into .envrc.
 
 
 Press Enter to continue..."

@@ -118,6 +118,32 @@ EOF
                               $pkflags --l1-eth-rpc=$L1_RPC_URL 2>&1 | tee -a proposer.log -i
             bash
             ;;
+        challenger)
+            pushd optimism/op-deployer
+            activate_direnv
+            gameFactoryAddr=$(./bin/op-deployer inspect l1 --workdir .deployer/ $L2_CHAIN_ID | jq -r '.opChainDeployment.disputeGameFactoryProxyAddress')
+            popd
+            cd optimism/op-challenger
+            activate_direnv
+            pkflags=$(challenger_pk_flags)
+            save_to_session_history $(cat <<EOF
+            bin/op-challenger --l1-eth-rpc $L1_RPC_URL --l1-beacon $L1_BEACON_URL \
+                --l2-eth-rpc http://localhost:8545 --rollup-rpc http://localhost:8547 \
+                --datadir ./datadir --cannon-server ../op-program/bin/op-program --cannon-bin ../cannon/bin/cannon \
+                --cannon-prestate $(realpath ../op-program/bin/prestate-mt64.bin.gz) $pkflags \
+                --cannon-rollup-config $(realpath ../op-program/chainconfig/configs/$L2_CHAIN_ID-rollup.json) \
+                --cannon-l2-genesis $(realpath ../op-program/chainconfig/configs/$L2_CHAIN_ID-genesis-l2.json) \
+                --game-factory-address $gameFactoryAddr --trace-type cannon --trace-type permissioned --unsafe-allow-invalid-prestate 2>&1 | tee -a challenger.log -i
+EOF
+            )
+            bin/op-challenger --l1-eth-rpc $L1_RPC_URL --l1-beacon $L1_BEACON_URL \
+                --l2-eth-rpc http://localhost:8545 --rollup-rpc http://localhost:8547 \
+                --datadir ./datadir --cannon-server ../op-program/bin/op-program --cannon-bin ../cannon/bin/cannon \
+                --cannon-prestate $(realpath ../op-program/bin/prestate-mt64.bin.gz) $pkflags \
+                --cannon-rollup-config $(realpath ../op-program/chainconfig/configs/$L2_CHAIN_ID-rollup.json) \
+                --cannon-l2-genesis $(realpath ../op-program/chainconfig/configs/$L2_CHAIN_ID-genesis-l2.json) \
+                --game-factory-address $gameFactoryAddr --trace-type cannon --trace-type permissioned --unsafe-allow-invalid-prestate 2>&1 | tee -a challenger.log -i
+            ;;
         blockscout)
             cd blockscout/docker-compose
             save_to_session_history "DOCKER_REPO=blockscout-optimism docker compose -f geth.yml up 2>&1 > blockscout.log"
@@ -368,7 +394,15 @@ if [ -z $start ]; then
     just op-challenger/op-challenger
     cd op-deployer
     just build
+    cd ..
+    cd op-program
+    make op-program
+    cd ..
+    cd cannon
+    make cannon
+    cd ..
     popd
+    
 
     pushd op-geth
     make geth
@@ -599,8 +633,12 @@ Press Enter to continue..."
     prompt "Now generate the L2 config files(genesis.json/rollup.json/jwt.txt)...
 Press Enter to continue..."
 
-    ./bin/op-deployer inspect genesis --workdir .deployer $L2_CHAIN_ID | tee ../op-node/genesis.json ../../op-geth/genesis.json > /dev/null
-    ./bin/op-deployer inspect rollup --workdir .deployer $L2_CHAIN_ID | tee ../op-node/rollup.json ../../op-geth/rollup.json > /dev/null
+    ./bin/op-deployer inspect genesis --workdir .deployer $L2_CHAIN_ID | tee ../op-node/genesis.json ../../op-geth/genesis.json "../op-program/chainconfig/configs/$L2_CHAIN_ID-genesis-l2.json" > /dev/null
+    ./bin/op-deployer inspect rollup --workdir .deployer $L2_CHAIN_ID | tee ../op-node/rollup.json ../../op-geth/rollup.json "../op-program/chainconfig/configs/$L2_CHAIN_ID-rollup.json" > /dev/null
+    pushd ../op-program
+    # generate prestate after chain configs are ready
+    make reproducible-prestate
+    popd
 
     openssl rand -hex 32 | tee ../op-node/jwt.txt ../../op-geth/jwt.txt > /dev/null
 

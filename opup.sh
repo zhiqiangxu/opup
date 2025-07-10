@@ -483,6 +483,7 @@ Press Enter to continue..."
         # to make it accessible in child process
         export REMOTE_SIGNERS_JSON
         if jq -e '. | has("admin") and has("batcher") and has("proposer") and has("challenger")' $REMOTE_SIGNERS_JSON > /dev/null; then
+            :
         else
             echo "remote_signers.json is not valid, please check it."
             exit 1
@@ -499,10 +500,11 @@ Press Enter to continue..."
             exit 1
         else
             prompt "
-Please copy the above "Admin account"(only used by op-deployer to send tx) and "Sequencer account" only, next we'll fill it into .envrc.
+Please copy the above \"Admin account\"(only used by op-deployer to send tx) and \"Sequencer account\" only, next we'll fill it into .envrc.
 
 
 Press Enter to continue..."
+        fi
     elif [[ -n "${ES}" && -n "${LOCAL_L1}" ]]; then
         prompt "
 Please copy the above(*except the Admin account*), next we'll fill it into .envrc.
@@ -574,8 +576,8 @@ Press Enter after you funded."
         replace_toml_value .deployer/intent.toml l1ChainID $L1_CHAIN_ID
         replace_toml_value .deployer/intent.toml l1ContractsLocator  $(quote_string "file://$forgeArtifacts")
         replace_toml_value .deployer/intent.toml l2ContractsLocator $(quote_string "file://$forgeArtifacts")
-        replace_toml_value .deployer/intent.toml proxyAdminOwner $(quote_string $admin))
-        replace_toml_value .deployer/intent.toml protocolVersionsOwner $(quote_string $admin))
+        replace_toml_value .deployer/intent.toml proxyAdminOwner $(quote_string $admin)
+        replace_toml_value .deployer/intent.toml protocolVersionsOwner $(quote_string $admin)
         replace_toml_value .deployer/intent.toml guardian $(quote_string $admin)
         replace_toml_value .deployer/intent.toml baseFeeVaultRecipient $(quote_string $admin)
         replace_toml_value .deployer/intent.toml l1FeeVaultRecipient $(quote_string $admin)

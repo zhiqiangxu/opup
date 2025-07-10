@@ -119,7 +119,7 @@ Press Enter to continue..."
     l2ChainID=$L2_CHAIN_ID
     popd
     pushd blockscout
-    replace_env_value docker-compose/envs/common-blockscout.env "CHAIN_ID" $l2ChainID
+    replace_string docker-compose/envs/common-blockscout.env "# CHAIN_ID=" "CHAIN_ID=$l2ChainID"
     replace_env_value docker-compose/envs/common-blockscout.env "NFT_MEDIA_HANDLER_ENABLED" "false"
     replace_string docker-compose/envs/common-blockscout.env "# CHAIN_TYPE=" "CHAIN_TYPE=optimism"
     replace_env_value docker-compose/envs/common-frontend.env "NEXT_PUBLIC_API_HOST" $hostIP

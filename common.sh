@@ -202,7 +202,7 @@ function proposer_pk_flags() {
         address=$(jq -r '.proposer.address' $REMOTE_SIGNERS_JSON)
         tlsCa=$(jq -r '.proposer.tlsca' $REMOTE_SIGNERS_JSON)
         tlsCert=$(jq -r '.proposer.tlscert' $REMOTE_SIGNERS_JSON)
-        tlsKey=$(jq -r '.proposer.tls.key' $REMOTE_SIGNERS_JSON)
+        tlsKey=$(jq -r '.proposer.tlskey' $REMOTE_SIGNERS_JSON)
         headers=$(jq -r '.proposer.headers // [] | @tsv' $REMOTE_SIGNERS_JSON)
         remote_signer_flags $endpoint $address $tlsCa $tlsCert $tlsKey ${headers[@]}
     fi

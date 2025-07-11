@@ -8,7 +8,10 @@ nuke: (down)
     ./opnuke.sh
 
 start:
-    ./opstart.sh    
+    ./opstart.sh
+
+start_challenger:
+    ./opstart_challenger.sh
 
 l1:
     ./opl1.sh

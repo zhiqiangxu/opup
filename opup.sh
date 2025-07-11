@@ -637,10 +637,22 @@ Press Enter to continue..."
 
     ./bin/op-deployer inspect genesis --workdir .deployer $L2_CHAIN_ID | tee ../op-node/genesis.json ../../op-geth/genesis.json "../op-program/chainconfig/configs/$L2_CHAIN_ID-genesis-l2.json" > /dev/null
     ./bin/op-deployer inspect rollup --workdir .deployer $L2_CHAIN_ID | tee ../op-node/rollup.json ../../op-geth/rollup.json "../op-program/chainconfig/configs/$L2_CHAIN_ID-rollup.json" > /dev/null
-    pushd ../op-program
+    
+    # deal with op-challenger
+    if [ -z "${CHALLENGER}" ]; then
+        read -p "Do you want to start op-challenger? y/N " answer
+        if [[ "$answer" == "y" ]]; then
+            export CHALLENGER=true
+        fi
+    fi
     # generate prestate after chain configs are ready
-    make reproducible-prestate
-    popd
+    if [ -n "${CHALLENGER}" ]; then
+        pushd ../op-program
+        make reproducible-prestate
+        popd
+    fi
+    
+    
 
     openssl rand -hex 32 | tee ../op-node/jwt.txt ../../op-geth/jwt.txt > /dev/null
 

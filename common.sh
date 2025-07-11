@@ -42,7 +42,9 @@ function start_op_services() {
     screen -d -m -S "op-node" bash -c "$opup_script_path node"
     screen -d -m -S "op-batcher" bash -c "$opup_script_path batcher"
     screen -d -m -S "op-proposer" bash -c "$opup_script_path proposer"
-    screen -d -m -S "op-challenger" bash -c "$opup_script_path challenger"
+    if [ -n "${CHALLENGER}" ]; then
+        screen -d -m -S "op-challenger" bash -c "$opup_script_path challenger"
+    fi
 }
 
 function start_explorer() {

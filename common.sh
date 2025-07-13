@@ -174,76 +174,84 @@ function remote_signer_flags() {
     echo "--signer.endpoint $endpoint --signer.address $address --signer.tls.ca $tlsCa --signer.tls.cert $tlsCert --signer.tls.key $tlsKey $headers --signer.tls.enabled"
 }
 
-function admin_address() {
-    if [ -z "$REMOTE_SIGNERS_JSON" ]; then
+function l1_admin_address() {
+    if [ -z "$REMOTE_CONFIG_JSON" ]; then
         echo "$GS_ADMIN_ADDRESS"
     else
-        jq -r '.admin.address' $REMOTE_SIGNERS_JSON
+        jq -r '.l1admin.address' $REMOTE_CONFIG_JSON
+    fi
+}
+
+function l2_admin_address() {
+    if [ -z "$REMOTE_CONFIG_JSON" ]; then
+        echo "$GS_ADMIN_ADDRESS"
+    else
+        jq -r '.l2admin.address' $REMOTE_CONFIG_JSON
     fi
 }
 
 function batcher_pk_flags() {
-    if [ -z "$REMOTE_SIGNERS_JSON" ]; then
+    if [ -z "$REMOTE_CONFIG_JSON" ]; then
         echo "--private-key=$GS_BATCHER_PRIVATE_KEY"
     else
-        endpoint=$(jq -r '.batcher.endpoint' $REMOTE_SIGNERS_JSON)
-        address=$(jq -r '.batcher.address' $REMOTE_SIGNERS_JSON)
-        tlsCa=$(jq -r '.batcher.tlsca' $REMOTE_SIGNERS_JSON)
-        tlsCert=$(jq -r '.batcher.tlscert' $REMOTE_SIGNERS_JSON)
-        tlsKey=$(jq -r '.batcher.tlskey' $REMOTE_SIGNERS_JSON)
-        headers=$(jq -r '.batcher.headers // [] | @tsv' $REMOTE_SIGNERS_JSON)
+        endpoint=$(jq -r '.batcher.endpoint' $REMOTE_CONFIG_JSON)
+        address=$(jq -r '.batcher.address' $REMOTE_CONFIG_JSON)
+        tlsCa=$(jq -r '.batcher.tlsca' $REMOTE_CONFIG_JSON)
+        tlsCert=$(jq -r '.batcher.tlscert' $REMOTE_CONFIG_JSON)
+        tlsKey=$(jq -r '.batcher.tlskey' $REMOTE_CONFIG_JSON)
+        headers=$(jq -r '.batcher.headers // [] | @tsv' $REMOTE_CONFIG_JSON)
         remote_signer_flags $endpoint $address $tlsCa $tlsCert $tlsKey ${headers[@]}
     fi
 }
 
 function proposer_pk_flags() {
-    if [ -z "$REMOTE_SIGNERS_JSON" ]; then
+    if [ -z "$REMOTE_CONFIG_JSON" ]; then
         echo "--private-key=$GS_PROPOSER_PRIVATE_KEY"
     else
-        endpoint=$(jq -r '.proposer.endpoint' $REMOTE_SIGNERS_JSON)
-        address=$(jq -r '.proposer.address' $REMOTE_SIGNERS_JSON)
-        tlsCa=$(jq -r '.proposer.tlsca' $REMOTE_SIGNERS_JSON)
-        tlsCert=$(jq -r '.proposer.tlscert' $REMOTE_SIGNERS_JSON)
-        tlsKey=$(jq -r '.proposer.tlskey' $REMOTE_SIGNERS_JSON)
-        headers=$(jq -r '.proposer.headers // [] | @tsv' $REMOTE_SIGNERS_JSON)
+        endpoint=$(jq -r '.proposer.endpoint' $REMOTE_CONFIG_JSON)
+        address=$(jq -r '.proposer.address' $REMOTE_CONFIG_JSON)
+        tlsCa=$(jq -r '.proposer.tlsca' $REMOTE_CONFIG_JSON)
+        tlsCert=$(jq -r '.proposer.tlscert' $REMOTE_CONFIG_JSON)
+        tlsKey=$(jq -r '.proposer.tlskey' $REMOTE_CONFIG_JSON)
+        headers=$(jq -r '.proposer.headers // [] | @tsv' $REMOTE_CONFIG_JSON)
         remote_signer_flags $endpoint $address $tlsCa $tlsCert $tlsKey ${headers[@]}
     fi
 }
 
 function challenger_pk_flags() {
-    if [ -z "$REMOTE_SIGNERS_JSON" ]; then
+    if [ -z "$REMOTE_CONFIG_JSON" ]; then
         echo "--private-key=$GS_CHALLENGER_PRIVATE_KEY"
     else
-        endpoint=$(jq -r '.challenger.endpoint' $REMOTE_SIGNERS_JSON)
-        address=$(jq -r '.challenger.address' $REMOTE_SIGNERS_JSON)
-        tlsCa=$(jq -r '.challenger.tlsca' $REMOTE_SIGNERS_JSON)
-        tlsCert=$(jq -r '.challenger.tlscert' $REMOTE_SIGNERS_JSON)
-        tlsKey=$(jq -r '.challenger.tlskey' $REMOTE_SIGNERS_JSON)
-        headers=$(jq -r '.challenger.headers // [] | @tsv' $REMOTE_SIGNERS_JSON)
+        endpoint=$(jq -r '.challenger.endpoint' $REMOTE_CONFIG_JSON)
+        address=$(jq -r '.challenger.address' $REMOTE_CONFIG_JSON)
+        tlsCa=$(jq -r '.challenger.tlsca' $REMOTE_CONFIG_JSON)
+        tlsCert=$(jq -r '.challenger.tlscert' $REMOTE_CONFIG_JSON)
+        tlsKey=$(jq -r '.challenger.tlskey' $REMOTE_CONFIG_JSON)
+        headers=$(jq -r '.challenger.headers // [] | @tsv' $REMOTE_CONFIG_JSON)
         remote_signer_flags $endpoint $address $tlsCa $tlsCert $tlsKey ${headers[@]}
     fi
 }
 
 function batcher_address() {
-    if [ -z "$REMOTE_SIGNERS_JSON" ]; then
+    if [ -z "$REMOTE_CONFIG_JSON" ]; then
         echo "$GS_BATCHER_ADDRESS"
     else
-        jq -r '.batcher.address' $REMOTE_SIGNERS_JSON
+        jq -r '.batcher.address' $REMOTE_CONFIG_JSON
     fi
 }
 
 function proposer_address() {
-    if [ -z "$REMOTE_SIGNERS_JSON" ]; then
+    if [ -z "$REMOTE_CONFIG_JSON" ]; then
         echo "$GS_PROPOSER_ADDRESS"
     else
-        jq -r '.proposer.address' $REMOTE_SIGNERS_JSON
+        jq -r '.proposer.address' $REMOTE_CONFIG_JSON
     fi
 }
 
 function challenger_address() {
-    if [ -z "$REMOTE_SIGNERS_JSON" ]; then
+    if [ -z "$REMOTE_CONFIG_JSON" ]; then
         echo "$GS_CHALLENGER_ADDRESS"
     else
-        jq -r '.challenger.address' $REMOTE_SIGNERS_JSON
+        jq -r '.challenger.address' $REMOTE_CONFIG_JSON
     fi
 }

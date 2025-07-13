@@ -479,10 +479,10 @@ Press Enter to continue..."
     done
 
     if [[ -n "${REMOTE_SIGNER}" ]]; then
-        read -p "Please enter the full path of remote_signers.json: " REMOTE_SIGNERS_JSON
+        read -p "Please enter the full path of remote_config.json: " REMOTE_CONFIG_JSON
         # to make it accessible in child process
-        export REMOTE_SIGNERS_JSON
-        if jq -e '. | has("admin") and has("batcher") and has("proposer") and has("challenger")' $REMOTE_SIGNERS_JSON > /dev/null; then
+        export REMOTE_CONFIG_JSON
+        if jq -e '. | has("l1admin") and has("l2admin") and has("batcher") and has("proposer") and has("challenger")' $REMOTE_CONFIG_JSON > /dev/null; then
             :
         else
             echo "remote_signers.json is not valid, please check it."
@@ -569,22 +569,23 @@ Press Enter after you funded."
     if [ "$answer" = "Y" ]; then
         op_deployer_init
 
-        admin=$(admin_address)
+        l1admin=$(l1_admin_address)
+        l2admin=$(l2_admin_address)
         batcher=$(batcher_address)
         proposer=$(proposer_address)
         challenger=$(challenger_address)
         replace_toml_value .deployer/intent.toml l1ChainID $L1_CHAIN_ID
         replace_toml_value .deployer/intent.toml l1ContractsLocator  $(quote_string "file://$forgeArtifacts")
         replace_toml_value .deployer/intent.toml l2ContractsLocator $(quote_string "file://$forgeArtifacts")
-        replace_toml_value .deployer/intent.toml proxyAdminOwner $(quote_string $admin)
-        replace_toml_value .deployer/intent.toml protocolVersionsOwner $(quote_string $admin)
-        replace_toml_value .deployer/intent.toml guardian $(quote_string $admin)
-        replace_toml_value .deployer/intent.toml baseFeeVaultRecipient $(quote_string $admin)
-        replace_toml_value .deployer/intent.toml l1FeeVaultRecipient $(quote_string $admin)
-        replace_toml_value .deployer/intent.toml sequencerFeeVaultRecipient $(quote_string $admin)
-        replace_toml_value .deployer/intent.toml l1ProxyAdminOwner $(quote_string $admin)
-        replace_toml_value .deployer/intent.toml l2ProxyAdminOwner $(quote_string $admin)
-        replace_toml_value .deployer/intent.toml systemConfigOwner $(quote_string $admin)
+        replace_toml_value .deployer/intent.toml proxyAdminOwner $(quote_string $l1admin)
+        replace_toml_value .deployer/intent.toml protocolVersionsOwner $(quote_string $l1admin)
+        replace_toml_value .deployer/intent.toml guardian $(quote_string $l1admin)
+        replace_toml_value .deployer/intent.toml baseFeeVaultRecipient $(quote_string $l2admin)
+        replace_toml_value .deployer/intent.toml l1FeeVaultRecipient $(quote_string $l2admin)
+        replace_toml_value .deployer/intent.toml sequencerFeeVaultRecipient $(quote_string $l2admin)
+        replace_toml_value .deployer/intent.toml l1ProxyAdminOwner $(quote_string $l1admin)
+        replace_toml_value .deployer/intent.toml l2ProxyAdminOwner $(quote_string $l2admin)
+        replace_toml_value .deployer/intent.toml systemConfigOwner $(quote_string $l1admin)
         replace_toml_value .deployer/intent.toml unsafeBlockSigner $(quote_string $GS_SEQUENCER_ADDRESS)
         replace_toml_value .deployer/intent.toml batcher $(quote_string $batcher)
         replace_toml_value .deployer/intent.toml proposer $(quote_string $proposer)

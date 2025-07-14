@@ -62,7 +62,7 @@ EOF
             save_to_session_history $(cat <<EOF
             ./bin/op-node   --l2=http://localhost:8551   --l2.jwt-secret=./jwt.txt   --sequencer.enabled  \
                             --sequencer.l1-confs=5   --verifier.l1-confs=4   --rollup.config=./rollup.json \
-                            --rpc.addr=0.0.0.0   --rpc.port=8547  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003\
+                            --rpc.addr=127.0.0.1   --rpc.port=8547  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003\
                             --p2p.listen.udp=9003   --rpc.enable-admin   --p2p.sequencer.key=$GS_SEQUENCER_PRIVATE_KEY\
                             --l1=$L1_RPC_URL   --l1.rpckind=$L1_RPC_KIND --l1.beacon=$L1_BEACON_URL \
                             --safedb.path=safedb \
@@ -71,7 +71,7 @@ EOF
             )            
             ./bin/op-node   --l2=http://localhost:8551   --l2.jwt-secret=./jwt.txt   --sequencer.enabled  \
                             --sequencer.l1-confs=5   --verifier.l1-confs=4   --rollup.config=./rollup.json \
-                            --rpc.addr=0.0.0.0   --rpc.port=8547  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003\
+                            --rpc.addr=127.0.0.1   --rpc.port=8547  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003\
                             --p2p.listen.udp=9003   --rpc.enable-admin   --p2p.sequencer.key=$GS_SEQUENCER_PRIVATE_KEY\
                             --l1=$L1_RPC_URL   --l1.rpckind=$L1_RPC_KIND --l1.beacon=$L1_BEACON_URL \
                             --safedb.path=safedb \

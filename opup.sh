@@ -87,14 +87,14 @@ EOF
                                --sub-safety-margin=20   --num-confirmations=1   --safe-abort-nonce-too-low-count=3   --resubmission-timeout=30s\
                                --rpc.addr=127.0.0.1   --rpc.port=8548   --rpc.enable-admin      --l1-eth-rpc=$L1_RPC_URL   \
                                $pkflags --data-availability-type blobs \
-                               --batch-type=1 --max-channel-duration=3600 --target-num-frames=5 2>&1 | tee -a batcher.log -i
+                               --batch-type=1 --max-channel-duration=${MaxChannelDuration:-3600} --target-num-frames=5 2>&1 | tee -a batcher.log -i
 EOF
             )
             ./bin/op-batcher   --l2-eth-rpc=http://localhost:8545   --rollup-rpc=http://localhost:8547   --poll-interval=1s   \
                                --sub-safety-margin=20   --num-confirmations=1   --safe-abort-nonce-too-low-count=3   --resubmission-timeout=30s\
                                --rpc.addr=127.0.0.1   --rpc.port=8548   --rpc.enable-admin      --l1-eth-rpc=$L1_RPC_URL   \
                                $pkflags --data-availability-type blobs \
-                               --batch-type=1 --max-channel-duration=3600 --target-num-frames=5 2>&1 | tee -a batcher.log -i
+                               --batch-type=1 --max-channel-duration=${MaxChannelDuration:-3600} --target-num-frames=5 2>&1 | tee -a batcher.log -i
             bash
             ;;
         proposer)
@@ -108,13 +108,13 @@ EOF
             save_to_session_history $(cat <<EOF
             ./bin/op-proposer --poll-interval=12s --rpc.port=8560 --rollup-rpc=http://localhost:8547 \
                               --game-factory-address=$gameFactoryAddr \
-                              --proposal-interval 12h --game-type 1\
+                              --proposal-interval ${OutputRootProposalInterval:-12h} --game-type 1\
                               $pkflags --l1-eth-rpc=$L1_RPC_URL 2>&1 | tee -a proposer.log -i
 EOF
             )
             ./bin/op-proposer --poll-interval=12s --rpc.port=8560 --rollup-rpc=http://localhost:8547 \
                               --game-factory-address=$gameFactoryAddr \
-                              --proposal-interval 12h --game-type 1\
+                              --proposal-interval ${OutputRootProposalInterval:-12h} --game-type 1\
                               $pkflags --l1-eth-rpc=$L1_RPC_URL 2>&1 | tee -a proposer.log -i
             bash
             ;;
@@ -652,6 +652,10 @@ Press Enter to continue..."
         make reproducible-prestate
         popd
     fi
+    read -p "Please enter MaxChannelDuration for op-batcher(leave blank for 3600): " MaxChannelDuration
+    read -p "Please enter OutputRootProposalInterval for op-proposer(leave blank for 12h): " OutputRootProposalInterval
+    export MaxChannelDuration OutputRootProposalInterval
+
     
     
 

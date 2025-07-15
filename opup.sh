@@ -605,7 +605,7 @@ Press Enter after you funded."
 [globalDeployOverrides]
   useInboxContract = true
   useSoulGasToken = true
-  soulGasTokenBlock = 0
+  soulGasTokenTimeOffset = "0x0"
   isSoulBackedByNative = true
   batchInboxAddress = "$INBOX_CONTRACT"
   l1BaseFeeScalarMultiplier = ${L1BaseFeeScalarMultiplier:-"0"}

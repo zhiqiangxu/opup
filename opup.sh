@@ -56,7 +56,9 @@ EOF
             activate_direnv
             dacParam=""
             if [ -n "${ES}" ]; then
-                dacParam="--dac.urls=http://localhost:8888"
+                if jq -e '.chain_op_config | has("l2BlobTime")' ./rollup.json > /dev/null; then
+                    dacParam="--dac.urls=http://localhost:8888"
+                fi
             fi
             mkdir safedb
             save_to_session_history $(cat <<EOF

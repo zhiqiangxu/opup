@@ -604,7 +604,7 @@ Press Enter after you funded."
                 cat <<EOF >> .deployer/intent.toml
 [globalDeployOverrides]
   useInboxContract = true
-  useSoulGasToken = true
+  deploySoulGasToken = true
   soulGasTokenTimeOffset = "0x0"
   isSoulBackedByNative = true
   batchInboxAddress = "$INBOX_CONTRACT"

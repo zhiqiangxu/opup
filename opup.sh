@@ -423,16 +423,16 @@ if [ -z $start ]; then
             replace_env_value_or_insert .envrc L1_BEACON_URL "http://65.108.230.142:3500"
             replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL "http://65.108.236.27:9645"
         else
-            replace_env_value .envrc L1_RPC_URL "http://$(kurtosis port print simple-devnet el-1-geth-teku rpc)"
+            replace_env_value .envrc L1_RPC_URL "http://$(kurtosis port print simple-devnet el-1-geth-lighthouse rpc)"
             replace_env_value .envrc L1_RPC_KIND standard
-            replace_env_value .envrc L1_CHAIN_ID $(cast chain-id -r $(kurtosis port print simple-devnet el-1-geth-teku rpc))
+            replace_env_value .envrc L1_CHAIN_ID $(cast chain-id -r $(kurtosis port print simple-devnet el-1-geth-lighthouse rpc))
             # the private key here comes from [here](https://github.com/ethpandaops/optimism-package/blob/c993cd0b9716fb063c1e514e19374e27e1b10b3c/static_files/scripts/fund.sh#L64)
             # also stored as l1FaucetPrivateKey in wallet.json of op-deployer-configs file artifact.
             prefunded_pk="04b9f63ecf84210c5366c66d68fa1f5da1fa4f634fad6dfc86178e4d79ff9e59"
             replace_env_value .envrc GS_ADMIN_PRIVATE_KEY $prefunded_pk
             replace_env_value .envrc GS_ADMIN_ADDRESS $(cast wallet address $prefunded_pk)
-            replace_env_value_or_insert .envrc L1_BEACON_URL $(kurtosis port print simple-devnet cl-1-teku-geth http)
-            replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL $(kurtosis port print simple-devnet cl-1-teku-geth http)
+            replace_env_value_or_insert .envrc L1_BEACON_URL $(kurtosis port print simple-devnet cl-1-lighthouse-geth http)
+            replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL $(kurtosis port print simple-devnet cl-1-lighthouse-geth http)
         fi
     fi
     prompt "Next we'll fill out the environment variable file ".envrc", finish by quiting the editor.

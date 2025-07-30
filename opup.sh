@@ -108,13 +108,13 @@ EOF
             activate_direnv
             pkflags=$(proposer_pk_flags)
             save_to_session_history $(cat <<EOF
-            ./bin/op-proposer --poll-interval=12s --rpc.port=8560 --rollup-rpc=http://localhost:8547 \
+            ./bin/op-proposer --poll-interval=12s --rpc.addr=127.0.0.1 --rpc.port=8560 --rollup-rpc=http://localhost:8547 \
                               --game-factory-address=$gameFactoryAddr \
                               --proposal-interval ${OutputRootProposalInterval:-12h} --game-type 1\
                               $pkflags --l1-eth-rpc=$L1_RPC_URL 2>&1 | tee -a proposer.log -i
 EOF
             )
-            ./bin/op-proposer --poll-interval=12s --rpc.port=8560 --rollup-rpc=http://localhost:8547 \
+            ./bin/op-proposer --poll-interval=12s --rpc.addr=127.0.0.1 --rpc.port=8560 --rollup-rpc=http://localhost:8547 \
                               --game-factory-address=$gameFactoryAddr \
                               --proposal-interval ${OutputRootProposalInterval:-12h} --game-type 1\
                               $pkflags --l1-eth-rpc=$L1_RPC_URL 2>&1 | tee -a proposer.log -i

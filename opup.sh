@@ -38,16 +38,16 @@ if [ "$#" -ne 0 ]; then
             cd op-geth
             save_to_session_history $(cat <<EOF
             ./build/bin/geth --datadir ./datadir   --http   --http.corsdomain="*"   --http.vhosts="*"   --http.addr=0.0.0.0   \
-                             --http.api=web3,debug,eth,txpool,net,engine,miner   --ws   --ws.addr=0.0.0.0   --ws.port=8546   --ws.origins="*" \
+                             --http.api=web3,debug,eth,txpool,net,engine,miner   --ws   --ws.addr=127.0.0.1   --ws.port=8546   --ws.origins="*" \
                              --ws.api=debug,eth,txpool,net,engine,miner   --syncmode=full   --gcmode=archive   --nodiscover   --maxpeers=0  \
-                             --networkid=$l2ChainID --authrpc.vhosts="*"   --authrpc.addr=0.0.0.0   --authrpc.port=8551   \
+                             --networkid=$l2ChainID --authrpc.vhosts="*"   --authrpc.addr=127.0.0.1   --authrpc.port=8551   \
                              $httpSGTParam --authrpc.jwtsecret=./jwt.txt  --rollup.disabletxpoolgossip=true  2>&1 | tee -a geth.log -i            
 EOF
             )
             ./build/bin/geth --datadir ./datadir   --http   --http.corsdomain="*"   --http.vhosts="*"   --http.addr=0.0.0.0   \
-                             --http.api=web3,debug,eth,txpool,net,engine,miner   --ws   --ws.addr=0.0.0.0   --ws.port=8546   --ws.origins="*" \
+                             --http.api=web3,debug,eth,txpool,net,engine,miner   --ws   --ws.addr=127.0.0.1   --ws.port=8546   --ws.origins="*" \
                              --ws.api=debug,eth,txpool,net,engine,miner   --syncmode=full   --gcmode=archive   --nodiscover   --maxpeers=0  \
-                             --networkid=$l2ChainID --authrpc.vhosts="*"   --authrpc.addr=0.0.0.0   --authrpc.port=8551   \
+                             --networkid=$l2ChainID --authrpc.vhosts="*"   --authrpc.addr=127.0.0.1   --authrpc.port=8551   \
                              $httpSGTParam --authrpc.jwtsecret=./jwt.txt  --rollup.disabletxpoolgossip=true  2>&1 | tee -a geth.log -i
             bash
             ;;

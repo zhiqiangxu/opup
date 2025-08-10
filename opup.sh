@@ -39,14 +39,14 @@ if [ "$#" -ne 0 ]; then
             save_to_session_history $(cat <<EOF
             ./build/bin/geth --datadir ./datadir   --http   --http.corsdomain="*"   --http.vhosts="*"   --http.addr=0.0.0.0   \
                              --http.api=web3,debug,eth,txpool,net,engine,miner   --ws   --ws.addr=127.0.0.1   --ws.port=8546   --ws.origins="*" \
-                             --ws.api=debug,eth,txpool,net,engine,miner   --syncmode=full   --gcmode=archive   --nodiscover   --maxpeers=0  \
+                             --ws.api=debug,eth,txpool,net,engine,miner   --syncmode=full   --gcmode=archive   --nodiscover   --maxpeers=5  \
                              --networkid=$l2ChainID --authrpc.vhosts="*"   --authrpc.addr=127.0.0.1   --authrpc.port=8551   \
                              $httpSGTParam --authrpc.jwtsecret=./jwt.txt  --rollup.disabletxpoolgossip  2>&1 | tee -a geth.log -i            
 EOF
             )
             ./build/bin/geth --datadir ./datadir   --http   --http.corsdomain="*"   --http.vhosts="*"   --http.addr=0.0.0.0   \
                              --http.api=web3,debug,eth,txpool,net,engine,miner   --ws   --ws.addr=127.0.0.1   --ws.port=8546   --ws.origins="*" \
-                             --ws.api=debug,eth,txpool,net,engine,miner   --syncmode=full   --gcmode=archive   --nodiscover   --maxpeers=0  \
+                             --ws.api=debug,eth,txpool,net,engine,miner   --syncmode=full   --gcmode=archive   --nodiscover   --maxpeers=5  \
                              --networkid=$l2ChainID --authrpc.vhosts="*"   --authrpc.addr=127.0.0.1   --authrpc.port=8551   \
                              $httpSGTParam --authrpc.jwtsecret=./jwt.txt  --rollup.disabletxpoolgossip  2>&1 | tee -a geth.log -i
             bash

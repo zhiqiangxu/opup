@@ -67,7 +67,7 @@ EOF
                             --rpc.addr=127.0.0.1   --rpc.port=8547  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003\
                             --p2p.listen.udp=9003 --p2p.no-discovery  --rpc.enable-admin   --p2p.sequencer.key=$GS_SEQUENCER_PRIVATE_KEY\
                             --l1=$L1_RPC_URL   --l1.rpckind=$L1_RPC_KIND --l1.beacon=$L1_BEACON_URL \
-                            --safedb.path=safedb \
+                            --safedb.path=safedb --l1.cache-size=0 \
                             $dacParam --l1.beacon-archiver=$L1_BEACON_ARCHIVER_URL 2>&1 | tee -a node.log -i
 EOF
             )            
@@ -76,7 +76,7 @@ EOF
                             --rpc.addr=127.0.0.1   --rpc.port=8547  --p2p.listen.ip=0.0.0.0 --p2p.listen.tcp=9003\
                             --p2p.listen.udp=9003 --p2p.no-discovery  --rpc.enable-admin   --p2p.sequencer.key=$GS_SEQUENCER_PRIVATE_KEY\
                             --l1=$L1_RPC_URL   --l1.rpckind=$L1_RPC_KIND --l1.beacon=$L1_BEACON_URL \
-                            --safedb.path=safedb \
+                            --safedb.path=safedb --l1.cache-size=0 \
                             $dacParam --l1.beacon-archiver=$L1_BEACON_ARCHIVER_URL 2>&1 | tee -a node.log -i
             bash
             ;;

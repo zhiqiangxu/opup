@@ -268,7 +268,7 @@ function replace_toml_value() {
     file=$1
     key=$2
     value=$3
-    sed_replace "s#$key = .*#$key = $value#" $file
+    sed_replace "s#$key = .*#$key = $value#I" $file
 }
 
 function install_npm() {
@@ -423,16 +423,20 @@ if [ -z $start ]; then
             replace_env_value_or_insert .envrc L1_BEACON_URL "http://65.108.230.142:3500"
             replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL "http://65.108.236.27:9645"
         else
-            replace_env_value .envrc L1_RPC_URL "http://$(kurtosis port print simple-devnet el-1-geth-teku rpc)"
+            # assuming running: kurtosis run --enclave my-l1 github.com/ethpandaops/ethereum-package@a43368eb3085a20f5950de0c7d11dc4bece37348
+            # you may need to:
+                # 1. install kurtosis 1.11.1: https://github.com/ethpandaops/ethereum-package/issues/1206#issuecomment-3359326524
+                # 2. run the troubuleshooting steps: https://github.com/QuarkChain/pm/blob/main/L2/kurtosis.md#troubleshooting
+            replace_env_value .envrc L1_RPC_URL "http://$(kurtosis port print my-l1 el-1-geth-lighthouse rpc)"
             replace_env_value .envrc L1_RPC_KIND standard
-            replace_env_value .envrc L1_CHAIN_ID $(cast chain-id -r $(kurtosis port print simple-devnet el-1-geth-teku rpc))
+            replace_env_value .envrc L1_CHAIN_ID $(cast chain-id -r $(kurtosis port print my-l1 el-1-geth-lighthouse rpc))
             # the private key here comes from [here](https://github.com/ethpandaops/optimism-package/blob/c993cd0b9716fb063c1e514e19374e27e1b10b3c/static_files/scripts/fund.sh#L64)
             # also stored as l1FaucetPrivateKey in wallet.json of op-deployer-configs file artifact.
             prefunded_pk="04b9f63ecf84210c5366c66d68fa1f5da1fa4f634fad6dfc86178e4d79ff9e59"
             replace_env_value .envrc GS_ADMIN_PRIVATE_KEY $prefunded_pk
             replace_env_value .envrc GS_ADMIN_ADDRESS $(cast wallet address $prefunded_pk)
-            replace_env_value_or_insert .envrc L1_BEACON_URL $(kurtosis port print simple-devnet cl-1-teku-geth http)
-            replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL $(kurtosis port print simple-devnet cl-1-teku-geth http)
+            replace_env_value_or_insert .envrc L1_BEACON_URL $(kurtosis port print my-l1 cl-1-lighthouse-geth http)
+            replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL $(kurtosis port print my-l1 cl-1-lighthouse-geth http)
         fi
     fi
     prompt "Next we'll fill out the environment variable file ".envrc", finish by quiting the editor.
@@ -579,9 +583,9 @@ Press Enter after you funded."
         replace_toml_value .deployer/intent.toml l1ChainID $L1_CHAIN_ID
         replace_toml_value .deployer/intent.toml l1ContractsLocator  $(quote_string "file://$forgeArtifacts")
         replace_toml_value .deployer/intent.toml l2ContractsLocator $(quote_string "file://$forgeArtifacts")
-        replace_toml_value .deployer/intent.toml proxyAdminOwner $(quote_string $l1admin)
+        replace_toml_value .deployer/intent.toml superchainProxyAdminOwner $(quote_string $l1admin)
         replace_toml_value .deployer/intent.toml protocolVersionsOwner $(quote_string $l1admin)
-        replace_toml_value .deployer/intent.toml guardian $(quote_string $l1admin)
+        replace_toml_value .deployer/intent.toml superchainGuardian $(quote_string $l1admin)
         replace_toml_value .deployer/intent.toml baseFeeVaultRecipient $(quote_string $l2admin)
         replace_toml_value .deployer/intent.toml l1FeeVaultRecipient $(quote_string $l2admin)
         replace_toml_value .deployer/intent.toml sequencerFeeVaultRecipient $(quote_string $l2admin)

@@ -60,6 +60,14 @@ EOF
                     dacParam="--dac.urls=http://localhost:8888"
                 fi
             fi
+            l1ChainConfig=""
+            if [ -n "${LOCAL_L1}" ]; then
+                if [ -z "${L1_CHAIN_CONFIG_JSON}" ]; then
+                    echo "L1_CHAIN_CONFIG_JSON is not set"
+                    exit 1
+                fi
+                l1ChainConfig="--rollup.l1-chain-config=$L1_CHAIN_CONFIG_JSON"
+            fi
             mkdir safedb
             save_to_session_history $(cat <<EOF
             ./bin/op-node   --l2=http://localhost:8551   --l2.jwt-secret=./jwt.txt   --sequencer.enabled  \
@@ -68,7 +76,7 @@ EOF
                             --p2p.listen.udp=9003 --p2p.no-discovery  --rpc.enable-admin   --p2p.sequencer.key=$GS_SEQUENCER_PRIVATE_KEY\
                             --l1=$L1_RPC_URL   --l1.rpckind=$L1_RPC_KIND --l1.beacon=$L1_BEACON_URL \
                             --safedb.path=safedb --l1.cache-size=0 \
-                            $dacParam --l1.beacon-archiver=$L1_BEACON_ARCHIVER_URL 2>&1 | tee -a node.log -i
+                            $dacParam $l1ChainConfig --l1.beacon-archiver=$L1_BEACON_ARCHIVER_URL 2>&1 | tee -a node.log -i
 EOF
             )            
             ./bin/op-node   --l2=http://localhost:8551   --l2.jwt-secret=./jwt.txt   --sequencer.enabled  \
@@ -77,7 +85,7 @@ EOF
                             --p2p.listen.udp=9003 --p2p.no-discovery  --rpc.enable-admin   --p2p.sequencer.key=$GS_SEQUENCER_PRIVATE_KEY\
                             --l1=$L1_RPC_URL   --l1.rpckind=$L1_RPC_KIND --l1.beacon=$L1_BEACON_URL \
                             --safedb.path=safedb --l1.cache-size=0 \
-                            $dacParam --l1.beacon-archiver=$L1_BEACON_ARCHIVER_URL 2>&1 | tee -a node.log -i
+                            $dacParam $l1ChainConfig --l1.beacon-archiver=$L1_BEACON_ARCHIVER_URL 2>&1 | tee -a node.log -i
             bash
             ;;
         batcher)
@@ -437,6 +445,11 @@ if [ -z $start ]; then
             replace_env_value .envrc GS_ADMIN_ADDRESS $(cast wallet address $prefunded_pk)
             replace_env_value_or_insert .envrc L1_BEACON_URL $(kurtosis port print my-l1 cl-1-lighthouse-geth http)
             replace_env_value_or_insert .envrc L1_BEACON_ARCHIVER_URL $(kurtosis port print my-l1 cl-1-lighthouse-geth http)
+            # export chain config file
+            kurtosis files download my-l1 el_cl_genesis_data
+            jq '.config' el_cl_genesis_data/genesis.json > chain-config.json
+            jq 'del(.terminalTotalDifficultyPassed)' chain-config.json > tmp.json && mv tmp.json chain-config.json
+            export L1_CHAIN_CONFIG_JSON="$(pwd)/chain-config.json"
         fi
     fi
     prompt "Next we'll fill out the environment variable file ".envrc", finish by quiting the editor.

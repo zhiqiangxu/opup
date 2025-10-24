@@ -667,6 +667,8 @@ Press Enter to continue..."
     fi
     # generate prestate after chain configs are ready
     if [ -n "${CHALLENGER}" ]; then
+        # switch to the target branch before building prestate
+        git checkout $optimismBranch
         pushd ../op-program
         make reproducible-prestate
         popd

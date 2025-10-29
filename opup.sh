@@ -593,6 +593,16 @@ Press Enter after you funded."
         batcher=$(batcher_address)
         proposer=$(proposer_address)
         challenger=$(challenger_address)
+
+        read -p "Do you want to set a customized superchainConfigProxy? y/N " answer
+        if [ -z "$answer" ]; then
+            answer="N"
+        fi
+        if [[ "$answer" == "y" ]]; then
+            read -p "Please enter superchainConfigProxy addr: " answer
+            # prepend superchainConfigProxy to the top of .deployer/intent.toml
+            (echo "superchainConfigProxy = \"$answer\"" && cat .deployer/intent.toml) > tmp && mv tmp .deployer/intent.toml
+        fi
         replace_toml_value .deployer/intent.toml l1ChainID $L1_CHAIN_ID
         replace_toml_value .deployer/intent.toml l1ContractsLocator  $(quote_string "file://$forgeArtifacts")
         replace_toml_value .deployer/intent.toml l2ContractsLocator $(quote_string "file://$forgeArtifacts")

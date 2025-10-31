@@ -16,6 +16,12 @@ start_challenger:
 l1:
     ./opl1.sh
 
+l1_verify:
+    ./opl1_verify.sh
+
+l2_verify:
+    ./opl2_verify.sh
+
 update_op_bins:
     ./update_op_bins.sh
 

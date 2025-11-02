@@ -110,7 +110,7 @@ EOF
         proposer)
             pushd optimism/op-deployer
             activate_direnv
-            gameFactoryAddr=$(./bin/op-deployer inspect l1 --workdir .deployer/ $L2_CHAIN_ID | jq -r '.opChainDeployment.disputeGameFactoryProxyAddress')
+            gameFactoryAddr=$(./bin/op-deployer inspect l1 --workdir .deployer/ $L2_CHAIN_ID | jq -r '.DisputeGameFactoryProxy')
             popd
             cd optimism/op-proposer
             activate_direnv
@@ -131,7 +131,7 @@ EOF
         challenger)
             pushd optimism/op-deployer
             activate_direnv
-            gameFactoryAddr=$(./bin/op-deployer inspect l1 --workdir .deployer/ $L2_CHAIN_ID | jq -r '.opChainDeployment.disputeGameFactoryProxyAddress')
+            gameFactoryAddr=$(./bin/op-deployer inspect l1 --workdir .deployer/ $L2_CHAIN_ID | jq -r '.DisputeGameFactoryProxy')
             popd
             cd optimism/op-challenger
             activate_direnv

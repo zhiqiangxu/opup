@@ -54,7 +54,7 @@ echo "This may take several minutes..."
 # and verify each contract on Etherscan
 ./bin/op-deployer verify \
     --l1-rpc-url "$L1_RPC_URL" \
-    --artifacts-locator "$(pwd)/packages/contracts-bedrock/forge-artifacts/" \
+    --artifacts-locator "file://$(pwd)/../packages/contracts-bedrock/forge-artifacts/" \
     --etherscan-api-key "$ETHERSCAN_API_KEY" \
     --input-file "$deployment_file"
 

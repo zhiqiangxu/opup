@@ -242,9 +242,16 @@ function wait_create2_factory_deployed() {
 function ensure_create2_factory_deployed() {
     output=$(codesize_at_address 0x4e59b44847b379578588920cA78FbF26c0B4956C $L1_RPC_URL | tr -d '\n')
     if [[ "$output" -eq 0 ]]; then
-        prompt "Next we'll deploy the Create2 factory contract at 0x4e59b44847b379578588920cA78FbF26c0B4956C.
+        if [ -n "$LOCAL_L1" ]; then
+                prompt "Auto funding 0x3fAB184622Dc19b6109349B94811493BF2a45362.
+Press Enter to continue..."
+            cast send 0x3fAB184622Dc19b6109349B94811493BF2a45362 --value 10000000000000000000000 --private-key $GS_ADMIN_PRIVATE_KEY -r $L1_RPC_URL
+        else
+            prompt "Next we'll deploy the Create2 factory contract at 0x4e59b44847b379578588920cA78FbF26c0B4956C.
 Please fund 0x3fAB184622Dc19b6109349B94811493BF2a45362(the factory deployer) with some ETH.
 Press Enter after you funded."
+        fi
+        
         cast publish --rpc-url $L1_RPC_URL 0xf8a58085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf31ba02222222222222222222222222222222222222222222222222222222222222222a02222222222222222222222222222222222222222222222222222222222222222 
         wait_create2_factory_deployed
     fi
@@ -449,6 +456,7 @@ if [ -z $start ]; then
             kurtosis files download my-l1 el_cl_genesis_data
             jq '.config' el_cl_genesis_data/genesis.json > chain-config.json
             jq 'del(.terminalTotalDifficultyPassed)' chain-config.json > tmp.json && mv tmp.json chain-config.json
+            rm -rf el_cl_genesis_data
             export L1_CHAIN_CONFIG_JSON="$(pwd)/chain-config.json"
         fi
     fi

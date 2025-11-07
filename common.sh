@@ -30,7 +30,7 @@ function start_da_server() {
 {
     "SequencerIP": "127.0.0.1",
     "ListenAddr": "0.0.0.0:8888",
-    "StorePath":  "/root/da/data"
+    "StorePath":  "${PWD}/da/data"
 }
 EOF
     popd

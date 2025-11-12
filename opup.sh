@@ -92,18 +92,22 @@ EOF
             cd optimism/op-batcher
             activate_direnv
             pkflags=$(batcher_pk_flags)
+            cellProofFlag=""
+            if [ -n "$CellProofTime" ]; then
+                cellProofFlag="--txmgr.cell-proof-time=$CellProofTime"
+            fi
             save_to_session_history $(cat <<EOF
             ./bin/op-batcher   --l2-eth-rpc=http://localhost:8545   --rollup-rpc=http://localhost:8547   --poll-interval=1s   \
                                --sub-safety-margin=20   --num-confirmations=1   --safe-abort-nonce-too-low-count=3   --resubmission-timeout=30s\
                                --rpc.addr=127.0.0.1   --rpc.port=8548   --rpc.enable-admin      --l1-eth-rpc=$L1_RPC_URL   \
-                               $pkflags --data-availability-type blobs --txmgr.enable-cell-proofs \
+                               $pkflags --data-availability-type blobs $cellProofFlag \
                                --batch-type=1 --max-channel-duration=${MaxChannelDuration:-3600} --target-num-frames=5 2>&1 | tee -a batcher.log -i
 EOF
             )
             ./bin/op-batcher   --l2-eth-rpc=http://localhost:8545   --rollup-rpc=http://localhost:8547   --poll-interval=1s   \
                                --sub-safety-margin=20   --num-confirmations=1   --safe-abort-nonce-too-low-count=3   --resubmission-timeout=30s\
                                --rpc.addr=127.0.0.1   --rpc.port=8548   --rpc.enable-admin      --l1-eth-rpc=$L1_RPC_URL   \
-                               $pkflags --data-availability-type blobs --txmgr.enable-cell-proofs \
+                               $pkflags --data-availability-type blobs $cellProofFlag \
                                --batch-type=1 --max-channel-duration=${MaxChannelDuration:-3600} --target-num-frames=5 2>&1 | tee -a batcher.log -i
             bash
             ;;
@@ -682,8 +686,15 @@ Press Enter to continue..."
         popd
     fi
     read -p "Please enter MaxChannelDuration for op-batcher(leave blank for 3600): " MaxChannelDuration
+    # Only ask for cell-proof-time if L1 chain is not Sepolia (11155111) or Mainnet (1)
+    if [ "$L1_CHAIN_ID" != "11155111" ] && [ "$L1_CHAIN_ID" != "1" ]; then
+        read -p "Please enter cell-proof-time for op-batcher(leave blank to skip): " CellProofTime
+    else
+        # Explicitly set CellProofTime to empty for Sepolia and Mainnet
+        CellProofTime=""
+    fi
     read -p "Please enter OutputRootProposalInterval for op-proposer(leave blank for 12h): " OutputRootProposalInterval
-    export MaxChannelDuration OutputRootProposalInterval
+    export MaxChannelDuration OutputRootProposalInterval CellProofTime
 
     
     

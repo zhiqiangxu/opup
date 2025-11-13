@@ -31,6 +31,28 @@ if ! command -v forge &> /dev/null; then
     exit 1
 fi
 
+# Function to get implementation address from proxy by calling implementation() method
+function get_implementation_address() {
+    local proxy_addr=$1
+    # Call implementation() method (function selector: 0x5c60da1b)
+    local impl_addr=$(cast call "$proxy_addr" "implementation()(address)" --rpc-url "$L2_RPC_URL" 2>/dev/null)
+    echo "$impl_addr"
+}
+
+# Check if a contract is proxied by calling implementation() method
+# Returns 0 (true) if proxied, 1 (false) if not proxied
+function is_proxied() {
+    local address=$1
+    # Try to call implementation() method
+    local impl_addr=$(cast call "$address" "implementation()(address)" --rpc-url "$L2_RPC_URL" 2>/dev/null)
+
+    # If the call succeeded and returned a non-zero address, it's proxied
+    if [ -n "$impl_addr" ] && [ "$impl_addr" != "0x0000000000000000000000000000000000000000" ] && [ "$impl_addr" != "0x" ]; then
+        return 0  # Proxied
+    fi
+    return 1  # Not proxied
+}
+
 # Define L2 predeploy contracts with their addresses and contract paths
 # Format: "ADDRESS:CONTRACT_FILE:CONTRACT_NAME"
 declare -a L2_CONTRACTS=(
@@ -57,7 +79,7 @@ success_count=0
 failed_count=0
 skipped_count=0
 
-echo "Starting verification of $total_contracts L2 predeploy contracts..."
+echo "Starting verification of $total_contracts L2 predeploy contracts (proxies + implementations)..."
 echo ""
 
 # Iterate through each contract and verify
@@ -66,32 +88,93 @@ for contract_info in "${L2_CONTRACTS[@]}"; do
 
     echo "----------------------------------------"
     echo "Verifying: $contract_name"
-    echo "Address: $address"
+    echo "Proxy Address: $address"
     echo "Contract: $contract_file:$contract_name"
     echo ""
 
-    # Check if contract exists at the address
+    # Check if contract exists at the proxy address
     code=$(cast code "$address" --rpc-url "$L2_RPC_URL" 2>/dev/null)
     if [ -z "$code" ] || [ "$code" = "0x" ]; then
-        echo "⚠ Skipping: No contract code at address $address"
+        echo "⚠ Skipping: No contract code at proxy address $address"
         ((skipped_count++))
         echo ""
         continue
     fi
 
-    # Run forge verify-contract
-    if forge verify-contract \
-        --rpc-url "$L2_RPC_URL" \
-        "$address" \
-        "$contract_file:$contract_name" \
-        --verifier blockscout \
-        --verifier-url "$BLOCKSCOUT_URL/api/" \
-        --watch; then
-        echo "✓ Successfully verified: $contract_name"
-        ((success_count++))
+    # Check if this is a proxied contract
+    if is_proxied "$address"; then
+        # Verify the proxy contract
+        echo "Verifying proxy contract at $address..."
+        # For proxied contracts, verify as Proxy
+        if forge verify-contract \
+            --rpc-url "$L2_RPC_URL" \
+            "$address" \
+            "src/universal/Proxy.sol:Proxy" \
+            --verifier blockscout \
+            --verifier-url "$BLOCKSCOUT_URL/api/" \
+            --compilation-profile default \
+            --watch; then
+            echo "✓ Successfully verified proxy: $contract_name"
+            ((success_count++))
+        else
+            echo "✗ Failed to verify proxy: $contract_name"
+            ((failed_count++))
+        fi
+        echo ""
+        sleep 2
+
+        # Verify the implementation contract
+        impl_address=$(get_implementation_address "$address")
+
+        # Check if we got a valid implementation address
+        if [ -z "$impl_address" ] || [ "$impl_address" = "0x0000000000000000000000000000000000000000" ]; then
+            echo "⚠ Skipping implementation: Could not fetch implementation address for $contract_name"
+            ((skipped_count++))
+            echo ""
+            continue
+        fi
+
+        echo "Verifying implementation contract at $impl_address..."
+
+        # Check if implementation exists
+        impl_code=$(cast code "$impl_address" --rpc-url "$L2_RPC_URL" 2>/dev/null)
+        if [ -z "$impl_code" ] || [ "$impl_code" = "0x" ]; then
+            echo "⚠ Skipping implementation: No contract code at address $impl_address"
+            ((skipped_count++))
+            echo ""
+            continue
+        fi
+
+        if forge verify-contract \
+            --rpc-url "$L2_RPC_URL" \
+            "$impl_address" \
+            "$contract_file:$contract_name" \
+            --verifier blockscout \
+            --verifier-url "$BLOCKSCOUT_URL/api/" \
+            --compilation-profile default \
+            --watch; then
+            echo "✓ Successfully verified implementation: $contract_name"
+            ((success_count++))
+        else
+            echo "✗ Failed to verify implementation: $contract_name"
+            ((failed_count++))
+        fi
     else
-        echo "✗ Failed to verify: $contract_name"
-        ((failed_count++))
+        # For non-proxied contracts, verify directly
+        if forge verify-contract \
+            --rpc-url "$L2_RPC_URL" \
+            "$address" \
+            "$contract_file:$contract_name" \
+            --verifier blockscout \
+            --verifier-url "$BLOCKSCOUT_URL/api/" \
+            --compilation-profile default \
+            --watch; then
+            echo "✓ Successfully verified: $contract_name (not proxied)"
+            ((success_count++))
+        else
+            echo "✗ Failed to verify: $contract_name"
+            ((failed_count++))
+        fi
     fi
 
     echo ""

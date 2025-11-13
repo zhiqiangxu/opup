@@ -49,6 +49,7 @@ declare -a L2_CONTRACTS=(
     "0x4200000000000000000000000000000000000042:src/governance/GovernanceToken.sol:GovernanceToken"
     "0x4200000000000000000000000000000000000020:src/vendor/eas/SchemaRegistry.sol:SchemaRegistry"
     "0x4200000000000000000000000000000000000021:src/vendor/eas/EAS.sol:EAS"
+    "0x4200000000000000000000000000000000000800:src/L2/SoulGasToken.sol:SoulGasToken"
 )
 
 total_contracts=${#L2_CONTRACTS[@]}
